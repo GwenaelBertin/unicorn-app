@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@prisma/client": "^6.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "prisma": "^6.9.0",
+    "ts-node": "^10.9.2"
+  },
+  "prisma": {
+    "seed": "ts-node back/prisma/seed.ts"
+  }
+}

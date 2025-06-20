@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// https://www.licornesociety.com/startup-list
+// Dans le monde des startups, le terme licorne est utilisé pour décrire une entreprise dont la valorisation est supérieure à 1 milliard de dollars.
+
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+provider = "sqlserver"
+url      = env("DATABASE_URL")
+}
+
+model Sector {
+sectorId    Int       @id @default(autoincrement()) @map("sector_id")
+name        String    @unique @map("name") @db.NVarChar(255)
+startups    Startup[]
+
+@@map("sector")
+}
+
+model Status {
+  statusId   Int       @id @default(autoincrement()) @map("status_id")
+  name       String    @unique @map("name") @db.NVarChar(50)
+  startups   Startup[]
+
+  @@map("status")
+}
+
+model Startup {
+startupId    Int       @id @default(autoincrement()) @map("startup_id")
+name         String    @unique @map("name") @db.NVarChar(255)
+foundedYear  Int?      @map("founded_year")
+valuation    Decimal   @map("valuation") @db.Decimal(20,2)
+website      String?   @map("website") @db.NVarChar(255)
+description  String?   @map("description") @db.NVarChar(255)
+
+sectorId     Int       @map("sector_id")
+sector       Sector    @relation(fields: [sectorId], references: [sectorId])
+
+statusId     Int       @map("status_id")
+status       Status    @relation(fields: [statusId], references: [statusId])
+
+createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime
+updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime
+
+@@map("startup")
+}
