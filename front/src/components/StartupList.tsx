@@ -20,12 +20,15 @@ import {
   Button,
   Link,
   mergeClasses,
+  Input,
+  Textarea,
 } from '@fluentui/react-components';
 import type { AvatarNamedColor, DialogOpenChangeEvent, DialogOpenChangeData } from '@fluentui/react-components';
 import { FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 import {
-  Delete24Regular
+  Delete24Regular,
+  Edit24Regular
 } from '@fluentui/react-icons';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
@@ -139,10 +142,11 @@ type RowData = {
   setFocusedItemId: (id: number) => void;
   handleRowClick: (startup: StartupWithColor) => void;
   handleDeleteClick: (e: React.MouseEvent, startupId: number) => void;
+  handleEditClick: (e: React.MouseEvent, startup: StartupWithColor) => void;
 };
 
 const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
-  const { startups, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick } = data;
+  const { startups, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick, handleEditClick } = data;
   const startup = startups[index];
   const styles = useStyles();
   const isSelected = startup.startupId === focusedItemId;
@@ -167,6 +171,12 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
         </div>
         <Button
           appearance="subtle"
+          icon={<Edit24Regular />}
+          onClick={(e) => handleEditClick(e, startup)}
+          aria-label="Modifier"
+        />
+        <Button
+          appearance="subtle"
           icon={<Delete24Regular />}
           onClick={(e) => handleDeleteClick(e, startup.startupId)}
           aria-label="Supprimer"
@@ -184,6 +194,10 @@ export const StartupList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStartup, setSelectedStartup] = useState<StartupWithColor | null>(null);
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [startupToDelete, setStartupToDelete] = useState<number | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingStartup, setEditingStartup] = useState<StartupWithColor | null>(null);
 
   const styles = useStyles();
 
@@ -193,11 +207,54 @@ export const StartupList: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleEditClick = (e: React.MouseEvent, startup: StartupWithColor) => {
+    e.stopPropagation();
+    setEditingStartup(startup);
+    setIsEditModalOpen(true);
+  };
+
   // suppression d'une startup
   const handleDeleteClick = (e: React.MouseEvent, startupId: number) => {
     e.stopPropagation(); // pr empecher l'ouverture de la modale
-    // et on n'oublie pas de mettre à jour la state avec la nouvelle liste sans la startup supprimée
-    setStartups(prevStartups => prevStartups.filter(s => s.startupId !== startupId));
+    setStartupToDelete(startupId);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (startupToDelete === null) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/${startupToDelete}`);
+      // et on n'oublie pas de mettre à jour la state avec la nouvelle liste sans la startup supprimée
+      setStartups(prevStartups => prevStartups.filter(s => s.startupId !== startupToDelete));
+    } catch (err) {
+      setError('Erreur lors de la suppression de la startup.');
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setStartupToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteConfirmOpen(false);
+    setStartupToDelete(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingStartup) return;
+
+    try {
+      const { color, ...startupToUpdate } = editingStartup;
+      const response = await axios.put(`${API_URL}/${editingStartup.startupId}`, startupToUpdate);
+
+      setStartups(startups.map(s => s.startupId === editingStartup.startupId ? { ...response.data, color: editingStartup.color } : s));
+      setIsEditModalOpen(false);
+      setEditingStartup(null);
+    } catch (err) {
+      setError("Erreur lors de la mise à jour de la startup.");
+    }
   };
 
   // ici on utilise usememo pour ne pas recalculer les couleurs
@@ -228,7 +285,8 @@ export const StartupList: React.FC = () => {
       focusedItemId: focusedItemId,      
       setFocusedItemId: setFocusedItemId,
       handleRowClick: handleRowClick,
-      handleDeleteClick: handleDeleteClick
+      handleDeleteClick: handleDeleteClick,
+      handleEditClick: handleEditClick
     };
 
     // On retourne cet objet
@@ -302,6 +360,67 @@ export const StartupList: React.FC = () => {
             </DialogContent>
             <DialogActions>
                 <Button appearance="secondary" onClick={() => setIsModalOpen(false)}>Fermer</Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+
+      {/* modale de confirmation de suppression */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={(_event, data) => setIsDeleteConfirmOpen(data.open)}>
+        <DialogSurface>
+            <DialogBody>
+                <DialogTitle>Confirmer la suppression</DialogTitle>
+                <DialogContent>
+                    Êtes-vous sûr de vouloir supprimer cette startup ? Cette action est irréversible.
+                </DialogContent>
+                <DialogActions>
+                    <Button appearance="secondary" onClick={handleCancelDelete}>Annuler</Button>
+                    <Button appearance="primary" onClick={handleConfirmDelete}>Confirmer</Button>
+                </DialogActions>
+            </DialogBody>
+        </DialogSurface>
+      </Dialog>
+
+      {/* Modale d'édition */}
+      <Dialog open={isEditModalOpen} onOpenChange={(_event, data) => setIsEditModalOpen(data.open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Modifier la startup</DialogTitle>
+            <DialogContent className={styles.dialogContent}>
+              <div className={styles.dialogSection}>
+                <Text weight="semibold">Nom</Text>
+                <Input
+                  value={editingStartup?.name || ''}
+                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, name: data.value } : null)}
+                />
+              </div>
+              <div className={styles.dialogSection}>
+                <Text weight="semibold">Valorisation ($)</Text>
+                <Input
+                  type="number"
+                  value={editingStartup?.valuation.toString() || ''}
+                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, valuation: Number(data.value) } : null)}
+                />
+              </div>
+              <div className={styles.dialogSection}>
+                <Text weight="semibold">Site Web</Text>
+                <Input
+                  value={editingStartup?.website || ''}
+                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, website: data.value } : null)}
+                />
+              </div>
+              <div className={styles.dialogSection}>
+                <Text weight="semibold">Description</Text>
+                <Textarea
+                  value={editingStartup?.description || ''}
+                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, description: data.value } : null)}
+                  rows={4}
+                />
+              </div>
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={() => setIsEditModalOpen(false)}>Annuler</Button>
+              <Button appearance="primary" onClick={handleSaveEdit}>Sauvegarder</Button>
             </DialogActions>
           </DialogBody>
         </DialogSurface>
