@@ -24,8 +24,11 @@ import {
 import type { AvatarNamedColor, DialogOpenChangeEvent, DialogOpenChangeData } from '@fluentui/react-components';
 import { FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
+import {
+  Delete24Regular
+} from '@fluentui/react-icons';
 
-// makeStyles de Fluent UI pour créer des classes CSS à partir d'un objet de style.
+// makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
   root: {
     padding: '16px',
@@ -37,10 +40,12 @@ const useStyles = makeStyles({
     display: 'flex',
     alignItems: 'center',
     gap: '16px',
+    width: '100%',
   },
   itemContent: {
     display: 'flex',
     flexDirection: 'column',
+    flexGrow: 0.95,
   },
   interactiveListItem: {
     cursor: 'pointer',
@@ -133,10 +138,11 @@ type RowData = {
   focusedItemId: number | null;
   setFocusedItemId: (id: number) => void;
   handleRowClick: (startup: StartupWithColor) => void;
+  handleDeleteClick: (e: React.MouseEvent, startupId: number) => void;
 };
 
 const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
-  const { startups, focusedItemId, setFocusedItemId, handleRowClick } = data;
+  const { startups, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick } = data;
   const startup = startups[index];
   const styles = useStyles();
   const isSelected = startup.startupId === focusedItemId;
@@ -159,6 +165,12 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
           <Body1>{startup.name}</Body1>
           <Caption1>{`Valuation: ${formatValuation(startup.valuation)}`}</Caption1>
         </div>
+        <Button
+          appearance="subtle"
+          icon={<Delete24Regular />}
+          onClick={(e) => handleDeleteClick(e, startup.startupId)}
+          aria-label="Supprimer"
+        />
       </div>
     </ListItem>
   );
@@ -179,6 +191,13 @@ export const StartupList: React.FC = () => {
   const handleRowClick = (startup: StartupWithColor) => {
     setSelectedStartup(startup);
     setIsModalOpen(true);
+  };
+
+  // suppression d'une startup
+  const handleDeleteClick = (e: React.MouseEvent, startupId: number) => {
+    e.stopPropagation(); // pr empecher l'ouverture de la modale
+    // et on n'oublie pas de mettre à jour la state avec la nouvelle liste sans la startup supprimée
+    setStartups(prevStartups => prevStartups.filter(s => s.startupId !== startupId));
   };
 
   // ici on utilise usememo pour ne pas recalculer les couleurs
@@ -208,12 +227,13 @@ export const StartupList: React.FC = () => {
       startups: startupsWithColors,      
       focusedItemId: focusedItemId,      
       setFocusedItemId: setFocusedItemId,
-      handleRowClick: handleRowClick   
+      handleRowClick: handleRowClick,
+      handleDeleteClick: handleDeleteClick
     };
 
     // On retourne cet objet
     return dataForRows;
-  }, [startupsWithColors, focusedItemId]);
+  }, [startupsWithColors, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick]);
 
   useEffect(() => {
     const fetchStartups = async () => {
