@@ -1,4 +1,4 @@
-// Service principal de l'application. Fournit la logique métier .
+// Service principal de l'app qui fournit la logique métier .
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

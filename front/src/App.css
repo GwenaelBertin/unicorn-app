@@ -1,9 +1,7 @@
 .container {
   width: 100%;
-  max-width: 1100px; /* Une largeur confortable pour le contenu */
-  margin-left: auto;
+  max-width: 1100px; 
   margin-right: auto;
-  padding-left: 16px; /* Un peu d'espace sur les côtés */
+  padding-left: 16px; 
   padding-right: 16px;
-  box-sizing: border-box; /* S'assure que le padding est inclus dans la largeur */
-}
+  box-sizing: border-box; 

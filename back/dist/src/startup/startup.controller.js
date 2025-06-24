@@ -15,12 +15,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StartupController = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const client_1 = require("@prisma/client");
 let StartupController = class StartupController {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async findAll() {
+    async createStartup(startupData) {
+        return this.prisma.startup.create({
+            data: startupData,
+        });
+    }
+    async getAllStartups() {
         return this.prisma.startup.findMany({
             include: {
                 sector: true,
@@ -28,7 +34,7 @@ let StartupController = class StartupController {
             },
         });
     }
-    async findOne(id) {
+    async getOneStartup(id) {
         return this.prisma.startup.findUnique({
             where: { startupId: Number(id) },
             include: {
@@ -37,21 +43,54 @@ let StartupController = class StartupController {
             },
         });
     }
+    async updateStartup(id, startupData) {
+        return this.prisma.startup.update({
+            where: { startupId: Number(id) },
+            data: startupData,
+        });
+    }
+    async deleteStartup(id) {
+        return this.prisma.startup.delete({
+            where: { startupId: Number(id) },
+        });
+    }
 };
 exports.StartupController = StartupController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], StartupController.prototype, "createStartup", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], StartupController.prototype, "findAll", null);
+], StartupController.prototype, "getAllStartups", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], StartupController.prototype, "findOne", null);
+], StartupController.prototype, "getOneStartup", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], StartupController.prototype, "updateStartup", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], StartupController.prototype, "deleteStartup", null);
 exports.StartupController = StartupController = __decorate([
     (0, common_1.Controller)('startups'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])

@@ -3,13 +3,11 @@ import axios from 'axios';
 import type { Startup } from '../types/Startup';
 import {
   makeStyles,
-  shorthands,
   tokens,
   List,
   ListItem,
   Avatar,
   Title1,
-  Spinner,
   Text,
   Body1,
   Caption1,
@@ -27,17 +25,18 @@ import type { AvatarNamedColor, DialogOpenChangeEvent, DialogOpenChangeData } fr
 import { FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 
+// makeStyles de Fluent UI pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
   root: {
-    ...shorthands.padding('16px'),
+    padding: '16px',
   },
   title: {
-    ...shorthands.margin(0, 0, '12px'),
+    margin: '0 0 12px',
   },
   row: {
     display: 'flex',
     alignItems: 'center',
-    ...shorthands.gap('16px'),
+    gap: '16px',
   },
   itemContent: {
     display: 'flex',
@@ -45,7 +44,7 @@ const useStyles = makeStyles({
   },
   interactiveListItem: {
     cursor: 'pointer',
-    ...shorthands.padding('0px', '10px'),
+    padding: '0px 10px',
     '&:hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
@@ -56,12 +55,12 @@ const useStyles = makeStyles({
   dialogContent: {
     display: 'flex',
     flexDirection: 'column',
-    ...shorthands.gap('16px'),
+    gap: '16px',
   },
   dialogSection: {
     display: 'flex',
     flexDirection: 'column',
-    ...shorthands.gap('4px'),
+    gap: '4px',
   }
 });
 
@@ -75,6 +74,7 @@ const namedColors: AvatarNamedColor[] = [
   'anchor',
 ];
 
+// couleur aléatoire pour l'avatar
 const getRandomColor = () => {
   const numberOfColors = namedColors.length;
   const randomDecimal = Math.random();
@@ -85,6 +85,7 @@ const getRandomColor = () => {
   return randomColor;
 };
 
+// initiales de la startup
 const getInitials = (name: string) => {
   const words = name.split(' ');
   const hasAtLeastTwoWords = words.length > 1;
@@ -100,6 +101,7 @@ const getInitials = (name: string) => {
   }
 };
 
+// format de la valorisation
 const formatValuation = (value: number) => {
   const oneBillion = 1000000000;
   const oneMillion = 1000000;
@@ -117,6 +119,9 @@ const formatValuation = (value: number) => {
 
 type StartupWithColor = Startup & { color: AvatarNamedColor };
 
+//Ici on utilise React.forwardRef pour passer la ref. 
+// il faut le faire pour que react-window fonctionne correctement avec le composant List.
+ 
 const StartupListRenderer = React.forwardRef<HTMLDivElement, React.PropsWithChildren>((props, ref) => {
   return (
     <List navigationMode="composite" {...props} ref={ref} />
@@ -159,6 +164,7 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
   );
 };
 
+// composant principal qui affiche la liste des startups, et toutes les states
 export const StartupList: React.FC = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,25 +175,45 @@ export const StartupList: React.FC = () => {
 
   const styles = useStyles();
 
+  // Ouvre la modale avecla startup sélectionnée 
   const handleRowClick = (startup: StartupWithColor) => {
     setSelectedStartup(startup);
     setIsModalOpen(true);
   };
 
-  const startupsWithColors = useMemo((): StartupWithColor[] => {
-    return startups.map(s => ({
-      ...s,
-      color: getRandomColor(),
-    }));
-  }, [startups]);
+  // ici on utilise usememo pour ne pas recalculer les couleurs
+  const startupsWithColors = useMemo(() => {
+    const coloredStartups = startups.map((startup) => {
+      const newStartup = {
+        name: startup.name,
+        foundedYear: startup.foundedYear,
+        valuation: startup.valuation,
+        website: startup.website,
+        description: startup.description,
+        sector: startup.sector,
+        status: startup.status,
+        startupId: startup.startupId,
+        // on ajoute  la couleur aléatoire
+        color: getRandomColor(),
+      };
+      return newStartup;
+    });
+    return coloredStartups;
+  }, [startups]); // on ne recalcule pas les couleurs si startups change
 
-  const itemData = useMemo((): RowData => ({
-    startups: startupsWithColors,
-    focusedItemId,
-    setFocusedItemId,
-    handleRowClick,
-  }), [startupsWithColors, focusedItemId]);
+  // et ici on utilise useMemo pour ne recalculer itemData que si startupsWithColors ou focusedItemId changent
+  const itemData = useMemo(function() {
+    // On crée un objet qui contient toutes les datas nécessaires pour chaque ligne de la liste
+    const dataForRows = {
+      startups: startupsWithColors,      
+      focusedItemId: focusedItemId,      
+      setFocusedItemId: setFocusedItemId,
+      handleRowClick: handleRowClick   
+    };
 
+    // On retourne cet objet
+    return dataForRows;
+  }, [startupsWithColors, focusedItemId]);
 
   useEffect(() => {
     const fetchStartups = async () => {
@@ -222,6 +248,7 @@ export const StartupList: React.FC = () => {
         {Row}
       </FixedSizeList>
 
+      {/* modale pour afficher les détails d'une startup. */}
       <Dialog open={isModalOpen} onOpenChange={(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) => setIsModalOpen(data.open)}>
         <DialogSurface>
           <DialogBody>

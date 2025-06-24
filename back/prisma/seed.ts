@@ -22,7 +22,7 @@ async function main() {
     { name: 'Active' },     // actuellement licorne
     { name: 'IPO' },       // entrée en bourse (donc plus considérée comme licorne)
     { name: 'Acquired' },  // rachetée (plus licorne)
-    { name: 'Pre2003' },   // fondée avant 2003 (jamais licorne selon la définition)
+    { name: 'Pre2003' },   // fondée avant 2003 (jamais licorne, selon la définition)
     { name: 'Relocated' }, // a déplacé son siège hors de France
   ];
   for (const status of statuses) {
