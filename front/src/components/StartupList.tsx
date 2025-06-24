@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import type { Startup } from '../types/Startup';
+import type { Startup, Sector, Status } from '../types/Startup';
 import {
   makeStyles,
   tokens,
@@ -22,13 +22,17 @@ import {
   mergeClasses,
   Input,
   Textarea,
+  Field,
+  Dropdown,
+  Option,
 } from '@fluentui/react-components';
 import type { AvatarNamedColor, DialogOpenChangeEvent, DialogOpenChangeData } from '@fluentui/react-components';
 import { FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 import {
   Delete24Regular,
-  Edit24Regular
+  Edit24Regular,
+  Add24Filled
 } from '@fluentui/react-icons';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
@@ -39,23 +43,26 @@ const useStyles = makeStyles({
   title: {
     margin: '0 0 12px',
   },
-  row: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    width: '100%',
-  },
   itemContent: {
     display: 'flex',
     flexDirection: 'column',
-    flexGrow: 0.95,
   },
   interactiveListItem: {
-    cursor: 'pointer',
     padding: '0px 10px',
     '&:hover': {
       backgroundColor: tokens.colorNeutralBackground1Hover,
     },
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  contentCell: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    flexGrow: 1,
+    cursor: 'pointer',
+    height: '100%',
   },
   itemSelected: {
     backgroundColor: tokens.colorSubtleBackgroundSelected,
@@ -156,10 +163,14 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
       style={style}
       key={startup.startupId}
       className={mergeClasses(styles.interactiveListItem, isSelected && styles.itemSelected)}
-      onClick={() => handleRowClick(startup)}
-      onFocus={() => setFocusedItemId(startup.startupId)}
     >
-      <div className={styles.row}>
+      <div
+        role="gridcell"
+        className={styles.contentCell}
+        onClick={() => handleRowClick(startup)}
+        onFocus={() => setFocusedItemId(startup.startupId)}
+        tabIndex={0}
+      >
         <Avatar
           color={startup.color}
           initials={getInitials(startup.name)}
@@ -169,12 +180,18 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
           <Body1>{startup.name}</Body1>
           <Caption1>{`Valuation: ${formatValuation(startup.valuation)}`}</Caption1>
         </div>
+      </div>
+
+      <div role="gridcell">
         <Button
           appearance="subtle"
           icon={<Edit24Regular />}
           onClick={(e) => handleEditClick(e, startup)}
           aria-label="Modifier"
         />
+      </div>
+
+      <div role="gridcell">
         <Button
           appearance="subtle"
           icon={<Delete24Regular />}
@@ -199,6 +216,18 @@ export const StartupList: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStartup, setEditingStartup] = useState<StartupWithColor | null>(null);
 
+  // State for the creation modal
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newStartup, setNewStartup] = useState<Partial<Startup>>({
+    name: '',
+    valuation: 0,
+    description: '',
+    website: '',
+    foundedYear: new Date().getFullYear(),
+  });
+  const [sectors, setSectors] = useState<Sector[]>([]);
+  const [statuses, setStatuses] = useState<Status[]>([]);
+
   const styles = useStyles();
 
   // Ouvre la modale avecla startup sélectionnée 
@@ -213,7 +242,6 @@ export const StartupList: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  // suppression d'une startup
   const handleDeleteClick = (e: React.MouseEvent, startupId: number) => {
     e.stopPropagation(); // pr empecher l'ouverture de la modale
     setStartupToDelete(startupId);
@@ -256,6 +284,50 @@ export const StartupList: React.FC = () => {
       setError("Erreur lors de la mise à jour de la startup.");
     }
   };
+  
+  const handleOpenCreateModal = () => {
+    setNewStartup({
+      name: '',
+      valuation: 0,
+      description: '',
+      website: '',
+      foundedYear: new Date().getFullYear(),
+      sector: sectors[0],
+      status: statuses[0],
+    });
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCreateFormChange = (fieldName: keyof Omit<Startup, 'sector' | 'status'>, value: string | number) => {
+    setNewStartup(current => ({ ...current, [fieldName]: value }));
+  };
+
+  // gestion des dropdowns
+  const handleCreateDropdownChange = (fieldName: 'sector' | 'status', selectedId: string | undefined) => {
+    if (selectedId === undefined) return;
+    
+    const id = parseInt(selectedId, 10);
+    const selectedValue = fieldName === 'sector'
+      ? sectors.find(s => s.sectorId === id)
+      : statuses.find(s => s.statusId === id);
+    
+    if (selectedValue) {
+      setNewStartup(current => ({ ...current, [fieldName]: selectedValue }));
+    }
+  };
+
+  const handleSaveNewStartup = async () => {
+    try {
+      const response = await axios.post(API_URL, newStartup);
+      const createdStartup = response.data;
+      
+      setStartups(currentStartups => [...currentStartups, createdStartup]);
+      
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      setError("Erreur lors de la création de la startup.");
+    }
+  };
 
   // ici on utilise usememo pour ne pas recalculer les couleurs
   const startupsWithColors = useMemo(() => {
@@ -291,20 +363,27 @@ export const StartupList: React.FC = () => {
 
     // On retourne cet objet
     return dataForRows;
-  }, [startupsWithColors, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick]);
+  }, [startupsWithColors, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick, handleEditClick]);
 
   useEffect(() => {
-    const fetchStartups = async () => {
+    const fetchInitialData = async () => {
       try {
-        const res = await axios.get<Startup[]>(API_URL);
-        setStartups(res.data);
+        const [startupsRes, sectorsRes, statusesRes] = await Promise.all([
+          axios.get<Startup[]>(API_URL),
+          axios.get<Sector[]>(`${API_URL.replace('/startups', '')}/sectors`),
+          axios.get<Status[]>(`${API_URL.replace('/startups', '')}/status`)
+        ]);
+
+        setStartups(startupsRes.data);
+        setSectors(sectorsRes.data);
+        setStatuses(statusesRes.data);
       } catch (err) {
-        setError('pb chargement des startups');
+        setError('Erreur lors du chargement des startups.');
       } finally {
         setLoading(false);
       }
     };
-    fetchStartups();
+    fetchInitialData();
   }, []);
 
   if (loading) return <div>Chargement...</div>;
@@ -315,6 +394,13 @@ export const StartupList: React.FC = () => {
       <Title1 as="h2" className={styles.title}>
         Top licornes françaises
       </Title1>
+
+      <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+        <Button appearance="primary" icon={<Add24Filled />} onClick={handleOpenCreateModal}>
+          Créer une startup
+        </Button>
+      </div>
+
       <FixedSizeList
         height={600}
         itemCount={startupsWithColors.length}
@@ -371,13 +457,69 @@ export const StartupList: React.FC = () => {
             <DialogBody>
                 <DialogTitle>Confirmer la suppression</DialogTitle>
                 <DialogContent>
-                    Êtes-vous sûr de vouloir supprimer cette startup ? Cette action est irréversible.
+                    Êtes-vous sûr de vouloir supprimer cette startup ? 
                 </DialogContent>
                 <DialogActions>
                     <Button appearance="secondary" onClick={handleCancelDelete}>Annuler</Button>
                     <Button appearance="primary" onClick={handleConfirmDelete}>Confirmer</Button>
                 </DialogActions>
             </DialogBody>
+        </DialogSurface>
+      </Dialog>
+
+      {/* modale de création */}
+      <Dialog
+        open={isCreateModalOpen}
+        onOpenChange={(_event, data) => setIsCreateModalOpen(data.open)}
+      >
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Créer une nouvelle startup</DialogTitle>
+            <DialogContent className={styles.dialogContent}>
+              <Field label="Nom de la startup" required>
+                <Input value={newStartup.name} onChange={(_e, data) => handleCreateFormChange('name', data.value)} />
+              </Field>
+              <Field label="Valorisation ($)" required>
+                <Input type="number" value={newStartup.valuation?.toString()} onChange={(_e, data) => handleCreateFormChange('valuation', Number(data.value))} />
+              </Field>
+              <Field label="Secteur" required>
+                <Dropdown
+                  onOptionSelect={(_e, data) => handleCreateDropdownChange('sector', data.optionValue)}
+                  value={newStartup.sector?.name || ''}
+                  defaultValue={newStartup.sector?.name}
+                >
+                  {sectors.map(sector => (
+                    <Option key={sector.sectorId} value={sector.sectorId.toString()}>
+                      {sector.name}
+                    </Option>
+                  ))}
+                </Dropdown>
+              </Field>
+              <Field label="Statut" required>
+                <Dropdown
+                  onOptionSelect={(_e, data) => handleCreateDropdownChange('status', data.optionValue)}
+                  value={newStartup.status?.name || ''}
+                  defaultValue={newStartup.status?.name}
+                >
+                  {statuses.map(status => (
+                    <Option key={status.statusId} value={status.statusId.toString()}>
+                      {status.name}
+                    </Option>
+                  ))}
+                </Dropdown>
+              </Field>
+              <Field label="Site Web">
+                <Input value={newStartup.website} onChange={(_e, data) => handleCreateFormChange('website', data.value)} />
+              </Field>
+              <Field label="Description">
+                <Textarea value={newStartup.description} onChange={(_e, data) => handleCreateFormChange('description', data.value)} />
+              </Field>
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={() => setIsCreateModalOpen(false)}>Annuler</Button>
+              <Button appearance="primary" onClick={handleSaveNewStartup}>Créer</Button>
+            </DialogActions>
+          </DialogBody>
         </DialogSurface>
       </Dialog>
 
