@@ -36,6 +36,7 @@ import {
 } from '@fluentui/react-icons';
 import StartupDetailsModal from './StartupDetailsModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import CreateStartupModal from './CreateStartupModal';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -423,60 +424,16 @@ export const StartupList: React.FC = () => {
       />
 
       {/* modale de création */}
-      <Dialog
+      <CreateStartupModal
         open={isCreateModalOpen}
-        onOpenChange={(_event, data) => setIsCreateModalOpen(data.open)}
-      >
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>Créer une nouvelle startup</DialogTitle>
-            <DialogContent className={styles.dialogContent}>
-              <Field label="Nom de la startup" required>
-                <Input value={newStartup.name} onChange={(_e, data) => handleCreateFormChange('name', data.value)} />
-              </Field>
-              <Field label="Valorisation ($)" required>
-                <Input type="number" value={newStartup.valuation?.toString()} onChange={(_e, data) => handleCreateFormChange('valuation', Number(data.value))} />
-              </Field>
-              <Field label="Secteur" required>
-                <Dropdown
-                  onOptionSelect={(_e, data) => handleCreateDropdownChange('sector', data.optionValue)}
-                  value={newStartup.sector?.name || ''}
-                  defaultValue={newStartup.sector?.name}
-                >
-                  {sectors.map(sector => (
-                    <Option key={sector.sectorId} value={sector.sectorId.toString()}>
-                      {sector.name}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-              <Field label="Statut" required>
-                <Dropdown
-                  onOptionSelect={(_e, data) => handleCreateDropdownChange('status', data.optionValue)}
-                  value={newStartup.status?.name || ''}
-                  defaultValue={newStartup.status?.name}
-                >
-                  {statuses.map(status => (
-                    <Option key={status.statusId} value={status.statusId.toString()}>
-                      {status.name}
-                    </Option>
-                  ))}
-                </Dropdown>
-              </Field>
-              <Field label="Site Web">
-                <Input value={newStartup.website} onChange={(_e, data) => handleCreateFormChange('website', data.value)} />
-              </Field>
-              <Field label="Description">
-                <Textarea value={newStartup.description} onChange={(_e, data) => handleCreateFormChange('description', data.value)} />
-              </Field>
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="secondary" onClick={() => setIsCreateModalOpen(false)}>Annuler</Button>
-              <Button appearance="primary" onClick={handleSaveNewStartup}>Créer</Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleSaveNewStartup}
+        sectors={sectors}
+        statuses={statuses}
+        newStartup={newStartup}
+        onFormChange={handleCreateFormChange}
+        onDropdownChange={handleCreateDropdownChange}
+      />
 
       {/* Modale d'édition */}
       <Dialog open={isEditModalOpen} onOpenChange={(_event, data) => setIsEditModalOpen(data.open)}>
