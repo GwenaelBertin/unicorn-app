@@ -37,6 +37,7 @@ import {
 import StartupDetailsModal from './StartupDetailsModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import CreateStartupModal from './CreateStartupModal';
+import EditStartupModal from './EditStartupModal';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -436,49 +437,13 @@ export const StartupList: React.FC = () => {
       />
 
       {/* Modale d'édition */}
-      <Dialog open={isEditModalOpen} onOpenChange={(_event, data) => setIsEditModalOpen(data.open)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>Modifier la startup</DialogTitle>
-            <DialogContent className={styles.dialogContent}>
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Nom</Text>
-                <Input
-                  value={editingStartup?.name || ''}
-                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, name: data.value } : null)}
-                />
-              </div>
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Valorisation ($)</Text>
-                <Input
-                  type="number"
-                  value={editingStartup?.valuation.toString() || ''}
-                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, valuation: Number(data.value) } : null)}
-                />
-              </div>
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Site Web</Text>
-                <Input
-                  value={editingStartup?.website || ''}
-                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, website: data.value } : null)}
-                />
-              </div>
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Description</Text>
-                <Textarea
-                  value={editingStartup?.description || ''}
-                  onChange={(_e, data) => setEditingStartup(s => s ? { ...s, description: data.value } : null)}
-                  rows={4}
-                />
-              </div>
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="secondary" onClick={() => setIsEditModalOpen(false)}>Annuler</Button>
-              <Button appearance="primary" onClick={handleSaveEdit}>Sauvegarder</Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
+      <EditStartupModal
+        open={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveEdit}
+        editingStartup={editingStartup}
+        onFieldChange={(field, value) => setEditingStartup(s => s ? { ...s, [field]: value } : null)}
+      />
     </div>
   );
 };
