@@ -1,5 +1,5 @@
 import React from 'react';
-import { StartupList } from './components/StartupList';
+import { StartupList } from './components/StartupList/StartupList';
 import './App.css';
 
 function App() {

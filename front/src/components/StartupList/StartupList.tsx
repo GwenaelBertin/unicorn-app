@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import type { Startup, Sector, Status } from '../types/Startup';
+import type { Startup, Sector, Status } from '../../types/Startup';
 import {
   makeStyles,
   tokens,
@@ -34,6 +34,7 @@ import {
   Edit24Regular,
   Add24Filled
 } from '@fluentui/react-icons';
+import StartupDetailsModal from './StartupDetailsModal';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -91,13 +92,8 @@ const namedColors: AvatarNamedColor[] = [
 
 // couleur aléatoire pour l'avatar
 const getRandomColor = () => {
-  const numberOfColors = namedColors.length;
-  const randomDecimal = Math.random();
-  const randomFloatingIndex = randomDecimal * numberOfColors;
-  const randomIndex = Math.floor(randomFloatingIndex);
-  const randomColor = namedColors[randomIndex];
-  
-  return randomColor;
+  const randomIndex = Math.floor(Math.random() * namedColors.length);
+  return namedColors[randomIndex];
 };
 
 // initiales de la startup
@@ -242,7 +238,7 @@ export const StartupList: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, startupId: number) => {
+  const handleDeleteClick = (startup: StartupWithColor) => {
     e.stopPropagation(); // pr empecher l'ouverture de la modale
     setStartupToDelete(startupId);
     setIsDeleteConfirmOpen(true);
@@ -413,43 +409,12 @@ export const StartupList: React.FC = () => {
       </FixedSizeList>
 
       {/* modale pour afficher les détails d'une startup. */}
-      <Dialog open={isModalOpen} onOpenChange={(_event: DialogOpenChangeEvent, data: DialogOpenChangeData) => setIsModalOpen(data.open)}>
-        <DialogSurface>
-          <DialogBody>
-            <DialogTitle>{selectedStartup?.name}</DialogTitle>
-            <DialogContent className={styles.dialogContent}>
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Description</Text>
-                <Text>{selectedStartup?.description || 'Non disponible'}</Text>
-              </div>
-
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Secteur d'activité</Text>
-                <Text>{selectedStartup?.sector?.name || 'Non disponible'}</Text>
-              </div>
-
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Année de création</Text>
-                <Text>{selectedStartup?.foundedYear || 'Non disponible'}</Text>
-              </div>
-
-              <div className={styles.dialogSection}>
-                <Text weight="semibold">Site web</Text>
-                {selectedStartup?.website ? (
-                  <Link href={selectedStartup.website} target="_blank" rel="noopener noreferrer">
-                    {selectedStartup.website}
-                  </Link>
-                ) : (
-                  <Text>Non disponible</Text>
-                )}
-              </div>
-            </DialogContent>
-            <DialogActions>
-                <Button appearance="secondary" onClick={() => setIsModalOpen(false)}>Fermer</Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
+      <StartupDetailsModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        startup={selectedStartup}
+        styles={{ dialogContent: styles.dialogContent, dialogSection: styles.dialogSection }}
+      />
 
       {/* modale de confirmation de suppression */}
       <Dialog open={isDeleteConfirmOpen} onOpenChange={(_event, data) => setIsDeleteConfirmOpen(data.open)}>
