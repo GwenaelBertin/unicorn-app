@@ -38,6 +38,7 @@ import StartupDetailsModal from './StartupDetailsModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import CreateStartupModal from './CreateStartupModal';
 import EditStartupModal from './EditStartupModal';
+import StartupListRow from './StartupListRow';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -151,54 +152,26 @@ type RowData = {
   handleEditClick: (e: React.MouseEvent, startup: StartupWithColor) => void;
 };
 
+// Fonction Row utilisée par react-window pour chaque ligne de la liste
 const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
   const { startups, focusedItemId, setFocusedItemId, handleRowClick, handleDeleteClick, handleEditClick } = data;
   const startup = startups[index];
   const styles = useStyles();
   const isSelected = startup.startupId === focusedItemId;
 
+  // On utilise le composant StartupListRow pour afficher chaque ligne
   return (
-    <ListItem
-      style={style}
-      key={startup.startupId}
-      className={mergeClasses(styles.interactiveListItem, isSelected && styles.itemSelected)}
-    >
-      <div
-        role="gridcell"
-        className={styles.contentCell}
-        onClick={() => handleRowClick(startup)}
-        onFocus={() => setFocusedItemId(startup.startupId)}
-        tabIndex={0}
-      >
-        <Avatar
-          color={startup.color}
-          initials={getInitials(startup.name)}
-          name={startup.name}
-        />
-        <div className={styles.itemContent}>
-          <Body1>{startup.name}</Body1>
-          <Caption1>{`Valuation: ${formatValuation(startup.valuation)}`}</Caption1>
-        </div>
-      </div>
-
-      <div role="gridcell">
-        <Button
-          appearance="subtle"
-          icon={<Edit24Regular />}
-          onClick={(e) => handleEditClick(e, startup)}
-          aria-label="Modifier"
-        />
-      </div>
-
-      <div role="gridcell">
-        <Button
-          appearance="subtle"
-          icon={<Delete24Regular />}
-          onClick={(e) => handleDeleteClick(e, startup.startupId)}
-          aria-label="Supprimer"
-        />
-      </div>
-    </ListItem>
+    <div style={style} key={startup.startupId}>
+      <StartupListRow
+        startup={startup}
+        isSelected={isSelected}
+        onRowClick={handleRowClick}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
+        setFocusedItemId={setFocusedItemId}
+        styles={styles}
+      />
+    </div>
   );
 };
 
