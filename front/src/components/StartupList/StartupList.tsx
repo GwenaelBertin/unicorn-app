@@ -35,6 +35,7 @@ import {
   Add24Filled
 } from '@fluentui/react-icons';
 import StartupDetailsModal from './StartupDetailsModal';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -212,7 +213,6 @@ export const StartupList: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStartup, setEditingStartup] = useState<StartupWithColor | null>(null);
 
-  // State for the creation modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newStartup, setNewStartup] = useState<Partial<Startup>>({
     name: '',
@@ -238,8 +238,7 @@ export const StartupList: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = (startup: StartupWithColor) => {
-    e.stopPropagation(); // pr empecher l'ouverture de la modale
+  const handleDeleteClick = (_e: React.MouseEvent, startupId: number) => {
     setStartupToDelete(startupId);
     setIsDeleteConfirmOpen(true);
   };
@@ -417,20 +416,11 @@ export const StartupList: React.FC = () => {
       />
 
       {/* modale de confirmation de suppression */}
-      <Dialog open={isDeleteConfirmOpen} onOpenChange={(_event, data) => setIsDeleteConfirmOpen(data.open)}>
-        <DialogSurface>
-            <DialogBody>
-                <DialogTitle>Confirmer la suppression</DialogTitle>
-                <DialogContent>
-                    Êtes-vous sûr de vouloir supprimer cette startup ? 
-                </DialogContent>
-                <DialogActions>
-                    <Button appearance="secondary" onClick={handleCancelDelete}>Annuler</Button>
-                    <Button appearance="primary" onClick={handleConfirmDelete}>Confirmer</Button>
-                </DialogActions>
-            </DialogBody>
-        </DialogSurface>
-      </Dialog>
+      <DeleteConfirmModal
+        open={isDeleteConfirmOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* modale de création */}
       <Dialog
