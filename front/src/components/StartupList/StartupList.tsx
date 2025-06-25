@@ -267,13 +267,23 @@ export const StartupList: React.FC = () => {
     setStartupToDelete(null);
   };
 
+  // Fonction appelée lors de l'édition d'une startup
   const handleSaveEdit = async () => {
     if (!editingStartup) return;
 
     try {
+      // On retire la couleur de l'objet à envoyer
       const { color, ...startupToUpdate } = editingStartup;
-      const response = await axios.put(`${API_URL}/${editingStartup.startupId}`, startupToUpdate);
-
+      // On prépare le payload pour Prisma
+      // On transforme sector et status pour respecter le format attendu
+      const payload = {
+        ...startupToUpdate, // on garde tous les champs sauf color
+        sector: { connect: { sectorId: (editingStartup.sector as Sector).sectorId } }, 
+        status: { connect: { statusId: (editingStartup.status as Status).statusId } }
+      };
+      // On envoie la requête (au bon format!
+      const response = await axios.put(`${API_URL}/${editingStartup.startupId}`, payload);
+      // On met à jour la liste 
       setStartups(startups.map(s => s.startupId === editingStartup.startupId ? { ...response.data, color: editingStartup.color } : s));
       setIsEditModalOpen(false);
       setEditingStartup(null);
@@ -313,13 +323,23 @@ export const StartupList: React.FC = () => {
     }
   };
 
+  // Fonction appelée lors de la création 
   const handleSaveNewStartup = async () => {
     try {
-      const response = await axios.post(API_URL, newStartup);
+      // On prépare le payload à envoyer à l'API
+      // On copie tous les champs de newStartup
+      // Mais attention, il faut transformer sector et status pour respecter le format attendu par Prisma
+      const payload = {
+        ...newStartup, 
+        sector: { connect: { sectorId: (newStartup.sector as Sector).sectorId } },
+        status: { connect: { statusId: (newStartup.status as Status).statusId } }  
+      };
+
+      const response = await axios.post(API_URL, payload);
       const createdStartup = response.data;
-      
+      // On ajoute l'ajoute à la liste 
       setStartups(currentStartups => [...currentStartups, createdStartup]);
-      
+      // Enfin on la ferme 
       setIsCreateModalOpen(false);
     } catch (err) {
       setError("Erreur lors de la création de la startup.");
