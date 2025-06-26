@@ -17,6 +17,7 @@ import DeleteConfirmModal from './DeleteConfirmModal';
 import CreateStartupModal from './CreateStartupModal';
 import EditStartupModal from './EditStartupModal';
 import StartupListRow from './StartupListRow';
+import { getRandomColor } from './utils/startupUtils';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -63,20 +64,6 @@ const useStyles = makeStyles({
 });
 
 const API_URL = 'http://localhost:3000/startups';
-
-const namedColors: AvatarNamedColor[] = [
-  'dark-red', 'cranberry', 'red', 'pumpkin', 'peach', 'marigold', 'gold',
-  'brass', 'brown', 'forest', 'seafoam', 'dark-green', 'light-teal', 'teal',
-  'steel', 'blue', 'royal-blue', 'cornflower', 'navy', 'lavender', 'purple',
-  'grape', 'lilac', 'pink', 'magenta', 'plum', 'beige', 'mink', 'platinum',
-  'anchor',
-];
-
-// couleur aléatoire pour l'avatar
-const getRandomColor = () => {
-  const randomIndex = Math.floor(Math.random() * namedColors.length);
-  return namedColors[randomIndex];
-};
 
 type StartupWithColor = Startup & { color: AvatarNamedColor };
 

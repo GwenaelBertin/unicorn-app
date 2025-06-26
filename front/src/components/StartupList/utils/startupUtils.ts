@@ -1,10 +1,3 @@
-// Fonctions utilitaires pour la gestion des startups
-
-/**
- * Retourne les initiales d'un nom de startup.
- * Si le nom contient plusieurs mots, prend la première lettre des deux premiers mots.
- * Sinon, prend les deux premières lettres du nom.
- */
 export const getInitials = (name: string) => {
   const words = name.split(' ');
   if (words.length > 1) {
@@ -14,10 +7,6 @@ export const getInitials = (name: string) => {
   }
 };
 
-/**
- * Formate la valorisation d'une startup en millions ou milliards de dollars.
- * Ex: 1200000000 => $1.20B, 50000000 => $50M
- */
 export const formatValuation = (value: number) => {
   const oneBillion = 1000000000;
   const oneMillion = 1000000;
@@ -26,4 +15,20 @@ export const formatValuation = (value: number) => {
   } else {
     return `$${(value / oneMillion).toFixed(0)}M`;
   }
+};
+
+import type { AvatarNamedColor} from '@fluentui/react-components';
+
+const namedColors: AvatarNamedColor[] = [
+    'dark-red', 'cranberry', 'red', 'pumpkin', 'peach', 'marigold', 'gold',
+    'brass', 'brown', 'forest', 'seafoam', 'dark-green', 'light-teal', 'teal',
+    'steel', 'blue', 'royal-blue', 'cornflower', 'navy', 'lavender', 'purple',
+    'grape', 'lilac', 'pink', 'magenta', 'plum', 'beige', 'mink', 'platinum',
+    'anchor',
+];
+
+// couleur aléatoire pour l'avatar
+export const getRandomColor = () => {
+    const randomIndex = Math.floor(Math.random() * namedColors.length);
+    return namedColors[randomIndex];
 }; 
