@@ -14,55 +14,26 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StartupController = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
+const startup_service_1 = require("./startup.service");
 let StartupController = class StartupController {
-    prisma;
-    constructor(prisma) {
-        this.prisma = prisma;
+    startupService;
+    constructor(startupService) {
+        this.startupService = startupService;
     }
-    async createStartup(body) {
-        const { sectorId, statusId, ...rest } = body;
-        return this.prisma.startup.create({
-            data: {
-                ...rest,
-                sector: { connect: { sectorId } },
-                status: { connect: { statusId } }
-            },
-        });
+    createStartup(body) {
+        return this.startupService.create(body);
     }
-    async getAllStartups() {
-        return this.prisma.startup.findMany({
-            include: {
-                sector: true,
-                status: true,
-            },
-        });
+    getAllStartups() {
+        return this.startupService.findAll();
     }
-    async getOneStartup(id) {
-        return this.prisma.startup.findUnique({
-            where: { startupId: Number(id) },
-            include: {
-                sector: true,
-                status: true,
-            },
-        });
+    getOneStartup(id) {
+        return this.startupService.findOne(Number(id));
     }
-    async updateStartup(id, body) {
-        const { sectorId, statusId, ...rest } = body;
-        delete rest.startupId;
-        return this.prisma.startup.update({
-            where: { startupId: Number(id) },
-            data: {
-                ...rest,
-                ...(sectorId && { sector: { connect: { sectorId } } }),
-                ...(statusId && { status: { connect: { statusId } } })
-            },
-        });
+    updateStartup(id, body) {
+        return this.startupService.update(Number(id), body);
     }
-    async deleteStartup(id) {
-        return this.prisma.startup.delete({
-            where: { startupId: Number(id) },
-        });
+    deleteStartup(id) {
+        return this.startupService.remove(Number(id));
     }
 };
 exports.StartupController = StartupController;
@@ -71,20 +42,20 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], StartupController.prototype, "createStartup", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], StartupController.prototype, "getAllStartups", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], StartupController.prototype, "getOneStartup", null);
 __decorate([
     (0, common_1.Patch)(':id'),
@@ -92,17 +63,17 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], StartupController.prototype, "updateStartup", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], StartupController.prototype, "deleteStartup", null);
 exports.StartupController = StartupController = __decorate([
     (0, common_1.Controller)('startups'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [startup_service_1.StartupService])
 ], StartupController);
 //# sourceMappingURL=startup.controller.js.map

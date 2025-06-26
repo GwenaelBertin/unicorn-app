@@ -1,9 +1,9 @@
-import { StartupService } from './startup.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-export declare class StartupController {
-    private readonly startupService;
-    constructor(startupService: StartupService);
-    createStartup(body: any): Prisma.Prisma__StartupClient<{
+export declare class StartupService {
+    private readonly prisma;
+    constructor(prisma: PrismaService);
+    create(body: any): Prisma.Prisma__StartupClient<{
         startupId: number;
         name: string;
         foundedYear: number | null;
@@ -15,7 +15,7 @@ export declare class StartupController {
         createdAt: Date;
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
-    getAllStartups(): Prisma.PrismaPromise<({
+    findAll(): Prisma.PrismaPromise<({
         sector: {
             name: string;
             sectorId: number;
@@ -36,7 +36,7 @@ export declare class StartupController {
         createdAt: Date;
         updatedAt: Date;
     })[]>;
-    getOneStartup(id: string): Prisma.Prisma__StartupClient<({
+    findOne(id: number): Prisma.Prisma__StartupClient<({
         sector: {
             name: string;
             sectorId: number;
@@ -57,7 +57,7 @@ export declare class StartupController {
         createdAt: Date;
         updatedAt: Date;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
-    updateStartup(id: string, body: any): Prisma.Prisma__StartupClient<{
+    update(id: number, body: any): Prisma.Prisma__StartupClient<{
         startupId: number;
         name: string;
         foundedYear: number | null;
@@ -69,7 +69,7 @@ export declare class StartupController {
         createdAt: Date;
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
-    deleteStartup(id: string): Prisma.Prisma__StartupClient<{
+    remove(id: number): Prisma.Prisma__StartupClient<{
         startupId: number;
         name: string;
         foundedYear: number | null;
