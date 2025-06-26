@@ -1,9 +1,9 @@
-import { PrismaService } from '../prisma/prisma.service';
+import { SectorService } from './sector.service';
 export declare class SectorController {
-    private readonly prisma;
-    constructor(prisma: PrismaService);
-    findAll(): Promise<{
-        name: string;
+    private readonly sectorService;
+    constructor(sectorService: SectorService);
+    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         sectorId: number;
+        name: string;
     }[]>;
 }

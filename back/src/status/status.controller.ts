@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { StatusService } from './status.service';
 
 @Controller('status')
 export class StatusController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly statusService: StatusService) {}
 
   @Get()
-  async findAll() {
-    return this.prisma.status.findMany();
+  findAll() {
+    return this.statusService.findAll();
   }
 } 

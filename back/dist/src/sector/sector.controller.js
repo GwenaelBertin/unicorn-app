@@ -11,14 +11,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SectorController = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
+const sector_service_1 = require("./sector.service");
 let SectorController = class SectorController {
-    prisma;
-    constructor(prisma) {
-        this.prisma = prisma;
+    sectorService;
+    constructor(sectorService) {
+        this.sectorService = sectorService;
     }
-    async findAll() {
-        return this.prisma.sector.findMany();
+    findAll() {
+        return this.sectorService.findAll();
     }
 };
 exports.SectorController = SectorController;
@@ -26,10 +26,10 @@ __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], SectorController.prototype, "findAll", null);
 exports.SectorController = SectorController = __decorate([
     (0, common_1.Controller)('sectors'),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [sector_service_1.SectorService])
 ], SectorController);
 //# sourceMappingURL=sector.controller.js.map

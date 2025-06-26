@@ -9,27 +9,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StatusController = void 0;
+exports.SectorService = void 0;
 const common_1 = require("@nestjs/common");
-const status_service_1 = require("./status.service");
-let StatusController = class StatusController {
-    statusService;
-    constructor(statusService) {
-        this.statusService = statusService;
+const prisma_service_1 = require("../prisma/prisma.service");
+let SectorService = class SectorService {
+    prisma;
+    constructor(prisma) {
+        this.prisma = prisma;
     }
     findAll() {
-        return this.statusService.findAll();
+        return this.prisma.sector.findMany();
     }
 };
-exports.StatusController = StatusController;
-__decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], StatusController.prototype, "findAll", null);
-exports.StatusController = StatusController = __decorate([
-    (0, common_1.Controller)('status'),
-    __metadata("design:paramtypes", [status_service_1.StatusService])
-], StatusController);
-//# sourceMappingURL=status.controller.js.map
+exports.SectorService = SectorService;
+exports.SectorService = SectorService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+], SectorService);
+//# sourceMappingURL=sector.service.js.map

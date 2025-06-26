@@ -9,12 +9,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatusModule = void 0;
 const common_1 = require("@nestjs/common");
 const status_controller_1 = require("./status.controller");
+const status_service_1 = require("./status.service");
 let StatusModule = class StatusModule {
 };
 exports.StatusModule = StatusModule;
 exports.StatusModule = StatusModule = __decorate([
     (0, common_1.Module)({
         controllers: [status_controller_1.StatusController],
+        providers: [status_service_1.StatusService],
     })
 ], StatusModule);
 //# sourceMappingURL=status.module.js.map

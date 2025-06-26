@@ -1,12 +1,12 @@
-import { Controller, Get } from '@nestjs/common'; 
-import { PrismaService } from '../prisma/prisma.service';
+import { Controller, Get } from '@nestjs/common';
+import { SectorService } from './sector.service';
 
 @Controller('sectors')
 export class SectorController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly sectorService: SectorService) {}
 
   @Get()
-  async findAll() {
-    return this.prisma.sector.findMany();
+  findAll() {
+    return this.sectorService.findAll();
   }
 }

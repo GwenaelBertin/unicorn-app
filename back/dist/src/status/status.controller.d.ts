@@ -1,8 +1,8 @@
-import { PrismaService } from '../prisma/prisma.service';
+import { StatusService } from './status.service';
 export declare class StatusController {
-    private readonly prisma;
-    constructor(prisma: PrismaService);
-    findAll(): Promise<{
+    private readonly statusService;
+    constructor(statusService: StatusService);
+    findAll(): import(".prisma/client").Prisma.PrismaPromise<{
         statusId: number;
         name: string;
     }[]>;
