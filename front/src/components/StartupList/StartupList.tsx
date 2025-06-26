@@ -8,16 +8,14 @@ import {
   Title1,
   Button,
 } from '@fluentui/react-components';
-import type { AvatarNamedColor} from '@fluentui/react-components';
 import { FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
 import { Add24Filled } from '@fluentui/react-icons';
-import StartupDetailsModal from './StartupDetailsModal';
+import StartupModal from './StartupModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
-import CreateStartupModal from './CreateStartupModal';
-import EditStartupModal from './EditStartupModal';
 import StartupListRow from './StartupListRow';
 import { getRandomColor } from './utils/startupUtils';
+import type { StartupWithColor } from './StartupListRow';
 
 // makeStyles (de Fluent UI) pour créer des classes CSS à partir d'un objet de style.
 const useStyles = makeStyles({
@@ -64,8 +62,6 @@ const useStyles = makeStyles({
 });
 
 const API_URL = 'http://localhost:3000/startups';
-
-type StartupWithColor = Startup & { color: AvatarNamedColor };
 
 //Ici on utilise React.forwardRef pour passer la ref. 
 // il faut le faire pour que react-window fonctionne correctement avec le composant List.
@@ -263,7 +259,7 @@ export const StartupList: React.FC = () => {
   // ici on utilise usememo pour ne pas recalculer les couleurs
   const startupsWithColors = useMemo(() => {
     const coloredStartups = startups.map((startup) => {
-      const newStartup = {
+      const newStartup: StartupWithColor = {
         name: startup.name,
         foundedYear: startup.foundedYear,
         valuation: startup.valuation,
@@ -272,13 +268,12 @@ export const StartupList: React.FC = () => {
         sector: startup.sector,
         status: startup.status,
         startupId: startup.startupId,
-        // on ajoute  la couleur aléatoire
-        color: getRandomColor(),
+        color: getRandomColor(), // getRandomColor() retourne AvatarNamedColor
       };
       return newStartup;
     });
     return coloredStartups;
-  }, [startups]); // on ne recalcule pas les couleurs si startups change
+  }, [startups]);
 
   // et ici on utilise useMemo pour ne recalculer itemData que si startupsWithColors ou focusedItemId changent
   const itemData = useMemo(function() {
@@ -344,8 +339,9 @@ export const StartupList: React.FC = () => {
       </FixedSizeList>
 
       {/* modale pour afficher les détails d'une startup. */}
-      <StartupDetailsModal
+      <StartupModal
         open={isModalOpen}
+        mode="read"
         onClose={() => setIsModalOpen(false)}
         startup={selectedStartup}
         styles={{ dialogContent: styles.dialogContent, dialogSection: styles.dialogSection }}
@@ -359,24 +355,40 @@ export const StartupList: React.FC = () => {
       />
 
       {/* modale de création */}
-      <CreateStartupModal
+      <StartupModal
         open={isCreateModalOpen}
+        mode="create"
         onClose={() => setIsCreateModalOpen(false)}
-        onCreate={handleSaveNewStartup}
+        onSave={handleSaveNewStartup}
         sectors={sectors}
         statuses={statuses}
-        newStartup={newStartup}
-        onFormChange={handleCreateFormChange}
+        startup={newStartup}
+        onFieldChange={handleCreateFormChange}
         onDropdownChange={handleCreateDropdownChange}
       />
 
       {/* Modale d'édition */}
-      <EditStartupModal
+      <StartupModal
         open={isEditModalOpen}
+        mode="edit"
         onClose={() => setIsEditModalOpen(false)}
         onSave={handleSaveEdit}
-        editingStartup={editingStartup}
+        sectors={sectors}
+        statuses={statuses}
+        startup={editingStartup}
         onFieldChange={(field, value) => setEditingStartup(s => s ? { ...s, [field]: value } : null)}
+        onDropdownChange={(field, selectedId) => {
+          if (!editingStartup) return;
+          if (field === 'sector') {
+            const id = parseInt(selectedId || '', 10);
+            const selectedSector = sectors.find(s => s.sectorId === id);
+            if (selectedSector) setEditingStartup(s => s ? { ...s, sector: selectedSector } : null);
+          } else if (field === 'status') {
+            const id = parseInt(selectedId || '', 10);
+            const selectedStatus = statuses.find(s => s.statusId === id);
+            if (selectedStatus) setEditingStartup(s => s ? { ...s, status: selectedStatus } : null);
+          }
+        }}
       />
     </div>
   );
