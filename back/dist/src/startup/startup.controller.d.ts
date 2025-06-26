@@ -3,81 +3,81 @@ import { Prisma } from '@prisma/client';
 export declare class StartupController {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    createStartup(startupData: Prisma.StartupCreateInput): Promise<{
-        statusId: number;
-        name: string;
-        sectorId: number;
+    createStartup(body: any): Promise<{
         startupId: number;
+        name: string;
         foundedYear: number | null;
         valuation: Prisma.Decimal;
         website: string | null;
         description: string | null;
+        sectorId: number;
+        statusId: number;
         createdAt: Date;
         updatedAt: Date;
     }>;
     getAllStartups(): Promise<({
-        status: {
-            statusId: number;
-            name: string;
-        };
         sector: {
             name: string;
             sectorId: number;
         };
+        status: {
+            name: string;
+            statusId: number;
+        };
     } & {
-        statusId: number;
-        name: string;
-        sectorId: number;
         startupId: number;
+        name: string;
         foundedYear: number | null;
         valuation: Prisma.Decimal;
         website: string | null;
         description: string | null;
+        sectorId: number;
+        statusId: number;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
     getOneStartup(id: string): Promise<({
-        status: {
-            statusId: number;
-            name: string;
-        };
         sector: {
             name: string;
             sectorId: number;
         };
+        status: {
+            name: string;
+            statusId: number;
+        };
     } & {
-        statusId: number;
-        name: string;
-        sectorId: number;
         startupId: number;
+        name: string;
         foundedYear: number | null;
         valuation: Prisma.Decimal;
         website: string | null;
         description: string | null;
+        sectorId: number;
+        statusId: number;
         createdAt: Date;
         updatedAt: Date;
     }) | null>;
-    updateStartup(id: string, startupData: Prisma.StartupUpdateInput): Promise<{
-        statusId: number;
-        name: string;
-        sectorId: number;
+    updateStartup(id: string, body: any): Promise<{
         startupId: number;
+        name: string;
         foundedYear: number | null;
         valuation: Prisma.Decimal;
         website: string | null;
         description: string | null;
+        sectorId: number;
+        statusId: number;
         createdAt: Date;
         updatedAt: Date;
     }>;
     deleteStartup(id: string): Promise<{
-        statusId: number;
-        name: string;
-        sectorId: number;
         startupId: number;
+        name: string;
         foundedYear: number | null;
         valuation: Prisma.Decimal;
         website: string | null;
         description: string | null;
+        sectorId: number;
+        statusId: number;
         createdAt: Date;
         updatedAt: Date;
     }>;

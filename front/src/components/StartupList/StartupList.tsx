@@ -5,35 +5,13 @@ import {
   makeStyles,
   tokens,
   List,
-  ListItem,
-  Avatar,
   Title1,
-  Text,
-  Body1,
-  Caption1,
-  Dialog,
-  DialogSurface,
-  DialogTitle,
-  DialogContent,
-  DialogBody,
-  DialogActions,
   Button,
-  Link,
-  mergeClasses,
-  Input,
-  Textarea,
-  Field,
-  Dropdown,
-  Option,
 } from '@fluentui/react-components';
-import type { AvatarNamedColor, DialogOpenChangeEvent, DialogOpenChangeData } from '@fluentui/react-components';
+import type { AvatarNamedColor} from '@fluentui/react-components';
 import { FixedSizeList } from 'react-window';
 import type { ListChildComponentProps } from 'react-window';
-import {
-  Delete24Regular,
-  Edit24Regular,
-  Add24Filled
-} from '@fluentui/react-icons';
+import { Add24Filled } from '@fluentui/react-icons';
 import StartupDetailsModal from './StartupDetailsModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import CreateStartupModal from './CreateStartupModal';
@@ -100,38 +78,6 @@ const getRandomColor = () => {
   return namedColors[randomIndex];
 };
 
-// initiales de la startup
-const getInitials = (name: string) => {
-  const words = name.split(' ');
-  const hasAtLeastTwoWords = words.length > 1;
-
-  if (hasAtLeastTwoWords) {
-    const firstInitial = words[0][0];
-    const secondInitial = words[1][0];
-    const initials = firstInitial + secondInitial;
-    return initials.toUpperCase();
-  } else {
-    const firstTwoLetters = name.substring(0, 2);
-    return firstTwoLetters.toUpperCase();
-  }
-};
-
-// format de la valorisation
-const formatValuation = (value: number) => {
-  const oneBillion = 1000000000;
-  const oneMillion = 1000000;
-
-  if (value >= oneBillion) {
-    const valueInBillions = value / oneBillion;
-    const formattedValue = valueInBillions.toFixed(2);
-    return `$${formattedValue}B`;
-  } else {
-    const valueInMillions = value / oneMillion;
-    const formattedValue = valueInMillions.toFixed(0);
-    return `$${formattedValue}M`;
-  }
-};
-
 type StartupWithColor = Startup & { color: AvatarNamedColor };
 
 //Ici on utilise React.forwardRef pour passer la ref. 
@@ -178,9 +124,9 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
 // composant principal qui affiche la liste des startups, et toutes les states
 export const StartupList: React.FC = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // TODO state staus string pour le chargement pending, error, success
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); //TODOutilisation de use reducer pour la modale de details
   const [selectedStartup, setSelectedStartup] = useState<StartupWithColor | null>(null);
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -245,21 +191,33 @@ export const StartupList: React.FC = () => {
     if (!editingStartup) return;
 
     try {
-      // On retire la couleur de l'objet à envoyer
-      const { color, ...startupToUpdate } = editingStartup;
-      // On prépare le payload pour Prisma
-      // On transforme sector et status pour respecter le format attendu
-      const payload = {
-        ...startupToUpdate, // on garde tous les champs sauf color
-        sector: { connect: { sectorId: (editingStartup.sector as Sector).sectorId } }, 
-        status: { connect: { statusId: (editingStartup.status as Status).statusId } }
+      // On retire color, sector, status de l'objet à envoyer
+      const { color, sector, status, ...startupToUpdate } = editingStartup;
+      // Vérification de la présence des relations
+      if (!sector || !status) {
+        setError("Secteur ou statut manquant !");
+        return;
+      }
+      // On prépare le body avec les ids uniquement
+      const requestBody = {
+        ...startupToUpdate, // on garde tous les champs sauf color, sector, status
+        sectorId: (sector as Sector).sectorId, // on envoie juste l'id
+        statusId: (status as Status).statusId  // idem
       };
-      // On envoie la requête (au bon format!
-      const response = await axios.put(`${API_URL}/${editingStartup.startupId}`, payload);
-      // On met à jour la liste 
-      setStartups(startups.map(s => s.startupId === editingStartup.startupId ? { ...response.data, color: editingStartup.color } : s));
-      setIsEditModalOpen(false);
-      setEditingStartup(null);
+      // Ajout de logs pour le debug
+      console.log('PATCH URL:', `${API_URL}/${editingStartup.startupId}`);
+      console.log('PATCH body:', requestBody);
+      console.log('startupId:', editingStartup.startupId, 'sectorId:', requestBody.sectorId, 'statusId:', requestBody.statusId);
+      // On envoie la requête 
+      const response = await axios.patch(`${API_URL}/${editingStartup.startupId}`, requestBody); 
+      // map() nous permet de parcourir chaque element du tableau et de remplacer la startup modifiée par la nouvelle réponse de l'API
+      setStartups(startups.map(s => 
+        s.startupId === editingStartup.startupId 
+          ? { ...response.data, color: editingStartup.color } // On remplace la startup modifiée dans la liste, en gardant la couleur
+          : s
+      ));
+      setIsEditModalOpen(false); // On ferme la modale d'édition
+      setEditingStartup(null);   // On réinitialise la startup en cours d'édition
     } catch (err) {
       setError("Erreur lors de la mise à jour de la startup.");
     }
@@ -278,6 +236,7 @@ export const StartupList: React.FC = () => {
     setIsCreateModalOpen(true);
   };
 
+  // gestion des champs du create form
   const handleCreateFormChange = (fieldName: keyof Omit<Startup, 'sector' | 'status'>, value: string | number) => {
     setNewStartup(current => ({ ...current, [fieldName]: value }));
   };
@@ -299,20 +258,15 @@ export const StartupList: React.FC = () => {
   // Fonction appelée lors de la création 
   const handleSaveNewStartup = async () => {
     try {
-      // On prépare le payload à envoyer à l'API
-      // On copie tous les champs de newStartup
-      // Mais attention, il faut transformer sector et status pour respecter le format attendu par Prisma
-      const payload = {
-        ...newStartup, 
-        sector: { connect: { sectorId: (newStartup.sector as Sector).sectorId } },
-        status: { connect: { statusId: (newStartup.status as Status).statusId } }  
+      // On prépare le body avec les ids uniquement
+      const requestBody = {
+        ...newStartup,
+        sectorId: (newStartup.sector as Sector).sectorId,
+        statusId: (newStartup.status as Status).statusId
       };
-
-      const response = await axios.post(API_URL, payload);
+      const response = await axios.post(API_URL, requestBody);
       const createdStartup = response.data;
-      // On ajoute l'ajoute à la liste 
       setStartups(currentStartups => [...currentStartups, createdStartup]);
-      // Enfin on la ferme 
       setIsCreateModalOpen(false);
     } catch (err) {
       setError("Erreur lors de la création de la startup.");

@@ -15,15 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StartupController = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
-const client_1 = require("@prisma/client");
 let StartupController = class StartupController {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async createStartup(startupData) {
+    async createStartup(body) {
+        const { sectorId, statusId, ...rest } = body;
         return this.prisma.startup.create({
-            data: startupData,
+            data: {
+                ...rest,
+                sector: { connect: { sectorId } },
+                status: { connect: { statusId } }
+            },
         });
     }
     async getAllStartups() {
@@ -43,10 +47,16 @@ let StartupController = class StartupController {
             },
         });
     }
-    async updateStartup(id, startupData) {
+    async updateStartup(id, body) {
+        const { sectorId, statusId, ...rest } = body;
+        delete rest.startupId;
         return this.prisma.startup.update({
             where: { startupId: Number(id) },
-            data: startupData,
+            data: {
+                ...rest,
+                ...(sectorId && { sector: { connect: { sectorId } } }),
+                ...(statusId && { status: { connect: { statusId } } })
+            },
         });
     }
     async deleteStartup(id) {

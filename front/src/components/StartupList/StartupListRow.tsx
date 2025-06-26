@@ -3,6 +3,7 @@ import { ListItem, Avatar, Body1, Caption1, Button, mergeClasses } from '@fluent
 import { Edit24Regular, Delete24Regular } from '@fluentui/react-icons';
 import type { Startup } from '../../types/Startup';
 import type { AvatarNamedColor } from '@fluentui/react-components';
+import { getInitials, formatValuation } from './utils/startupUtils';
 
 // Type pour une startup avec couleur d'avatar
 export type StartupWithColor = Startup & { color: AvatarNamedColor };
@@ -17,27 +18,6 @@ interface StartupListRowProps {
   setFocusedItemId: (id: number) => void;
   styles: Record<string, string>;
 }
-
-// Fonction utilitaire pour obtenir les initiales 
-const getInitials = (name: string) => {
-  const words = name.split(' ');
-  if (words.length > 1) {
-    return (words[0][0] + words[1][0]).toUpperCase();
-  } else {
-    return name.substring(0, 2).toUpperCase();
-  }
-};
-
-// Fonction utilitaire pour formater la valorisation
-const formatValuation = (value: number) => {
-  const oneBillion = 1000000000;
-  const oneMillion = 1000000;
-  if (value >= oneBillion) {
-    return `$${(value / oneBillion).toFixed(2)}B`;
-  } else {
-    return `$${(value / oneMillion).toFixed(0)}M`;
-  }
-};
 
 /**
  * Composant qui affiche une ligne de la liste des startups.
