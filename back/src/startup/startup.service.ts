@@ -28,6 +28,9 @@ export class StartupService {
         sector: true,
         status: true,
       },
+      orderBy: {
+        valuation: 'desc',
+      },
     });
   }
 
