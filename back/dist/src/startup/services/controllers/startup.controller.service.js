@@ -11,14 +11,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StartupService = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("../prisma/prisma.service");
+const prisma_service_1 = require("../../../prisma/prisma.service");
 let StartupService = class StartupService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    create(body) {
-        const { sectorId, statusId, ...rest } = body;
+    create(startup) {
+        const { sectorId, statusId, ...rest } = startup;
         return this.prisma.startup.create({
             data: {
                 ...rest,
@@ -47,9 +47,8 @@ let StartupService = class StartupService {
             },
         });
     }
-    update(id, body) {
-        const { sectorId, statusId, ...rest } = body;
-        delete rest.startupId;
+    update(id, startup) {
+        const { sectorId, statusId, ...rest } = startup;
         return this.prisma.startup.update({
             where: { startupId: id },
             data: {
@@ -70,4 +69,4 @@ exports.StartupService = StartupService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], StartupService);
-//# sourceMappingURL=startup.service.js.map
+//# sourceMappingURL=startup.controller.service.js.map

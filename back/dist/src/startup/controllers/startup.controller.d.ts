@@ -1,83 +1,84 @@
-import { StartupService } from './startup.service';
+import { StartupService } from '../services/controllers/startup.controller.service';
 import { Prisma } from '@prisma/client';
+import StartupDto from '../models/dto/startup.dto';
 export declare class StartupController {
     private readonly startupService;
     constructor(startupService: StartupService);
-    createStartup(body: any): Prisma.Prisma__StartupClient<{
-        startupId: number;
+    createStartup(body: StartupDto): Prisma.Prisma__StartupClient<{
         name: string;
-        foundedYear: number | null;
         valuation: Prisma.Decimal;
-        website: string | null;
         description: string | null;
+        website: string | null;
+        foundedYear: number | null;
         sectorId: number;
         statusId: number;
+        startupId: number;
         createdAt: Date;
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
     getAllStartups(): Prisma.PrismaPromise<({
-        sector: {
-            name: string;
-            sectorId: number;
-        };
         status: {
             name: string;
             statusId: number;
         };
+        sector: {
+            name: string;
+            sectorId: number;
+        };
     } & {
-        startupId: number;
         name: string;
-        foundedYear: number | null;
         valuation: Prisma.Decimal;
-        website: string | null;
         description: string | null;
+        website: string | null;
+        foundedYear: number | null;
         sectorId: number;
         statusId: number;
+        startupId: number;
         createdAt: Date;
         updatedAt: Date;
     })[]>;
     getOneStartup(id: string): Prisma.Prisma__StartupClient<({
-        sector: {
-            name: string;
-            sectorId: number;
-        };
         status: {
             name: string;
             statusId: number;
         };
+        sector: {
+            name: string;
+            sectorId: number;
+        };
     } & {
-        startupId: number;
         name: string;
-        foundedYear: number | null;
         valuation: Prisma.Decimal;
-        website: string | null;
         description: string | null;
+        website: string | null;
+        foundedYear: number | null;
         sectorId: number;
         statusId: number;
+        startupId: number;
         createdAt: Date;
         updatedAt: Date;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
-    updateStartup(id: string, body: any): Prisma.Prisma__StartupClient<{
-        startupId: number;
+    updateStartup(id: string, body: StartupDto): Prisma.Prisma__StartupClient<{
         name: string;
-        foundedYear: number | null;
         valuation: Prisma.Decimal;
-        website: string | null;
         description: string | null;
+        website: string | null;
+        foundedYear: number | null;
         sectorId: number;
         statusId: number;
+        startupId: number;
         createdAt: Date;
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
     deleteStartup(id: string): Prisma.Prisma__StartupClient<{
-        startupId: number;
         name: string;
-        foundedYear: number | null;
         valuation: Prisma.Decimal;
-        website: string | null;
         description: string | null;
+        website: string | null;
+        foundedYear: number | null;
         sectorId: number;
         statusId: number;
+        startupId: number;
         createdAt: Date;
         updatedAt: Date;
     }, never, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;

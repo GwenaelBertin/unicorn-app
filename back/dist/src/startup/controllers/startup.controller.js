@@ -14,14 +14,15 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StartupController = void 0;
 const common_1 = require("@nestjs/common");
-const startup_service_1 = require("./startup.service");
+const startup_controller_service_1 = require("../services/controllers/startup.controller.service");
+const startup_dto_1 = require("../models/dto/startup.dto");
 let StartupController = class StartupController {
     startupService;
     constructor(startupService) {
         this.startupService = startupService;
     }
     createStartup(body) {
-        return this.startupService.create(body);
+        return this.startupService.create(body.startup);
     }
     getAllStartups() {
         return this.startupService.findAll();
@@ -30,7 +31,7 @@ let StartupController = class StartupController {
         return this.startupService.findOne(Number(id));
     }
     updateStartup(id, body) {
-        return this.startupService.update(Number(id), body);
+        return this.startupService.update(Number(id), body.startup);
     }
     deleteStartup(id) {
         return this.startupService.remove(Number(id));
@@ -41,7 +42,7 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [startup_dto_1.default]),
     __metadata("design:returntype", void 0)
 ], StartupController.prototype, "createStartup", null);
 __decorate([
@@ -62,7 +63,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, startup_dto_1.default]),
     __metadata("design:returntype", void 0)
 ], StartupController.prototype, "updateStartup", null);
 __decorate([
@@ -74,6 +75,6 @@ __decorate([
 ], StartupController.prototype, "deleteStartup", null);
 exports.StartupController = StartupController = __decorate([
     (0, common_1.Controller)('startups'),
-    __metadata("design:paramtypes", [startup_service_1.StartupService])
+    __metadata("design:paramtypes", [startup_controller_service_1.StartupService])
 ], StartupController);
 //# sourceMappingURL=startup.controller.js.map

@@ -1,9 +1,17 @@
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 export declare class StartupService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    create(body: any): Prisma.Prisma__StartupClient<{
+    create(startup: {
+        name: string;
+        valuation: number;
+        description: string;
+        website: string;
+        foundedYear: number;
+        sectorId: number;
+        statusId: number;
+    }): Prisma.Prisma__StartupClient<{
         startupId: number;
         name: string;
         foundedYear: number | null;
@@ -57,7 +65,15 @@ export declare class StartupService {
         createdAt: Date;
         updatedAt: Date;
     }) | null, null, import("@prisma/client/runtime/library").DefaultArgs, Prisma.PrismaClientOptions>;
-    update(id: number, body: any): Prisma.Prisma__StartupClient<{
+    update(id: number, startup: {
+        name?: string;
+        valuation?: number;
+        description?: string;
+        website?: string;
+        foundedYear?: number;
+        sectorId?: number;
+        statusId?: number;
+    }): Prisma.Prisma__StartupClient<{
         startupId: number;
         name: string;
         foundedYear: number | null;
