@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useReducer } from 'react';
 import axios from 'axios';
 import type { Startup, Sector, Status } from '../../types/Startup';
 import {
@@ -104,155 +104,213 @@ const Row = ({ index, style, data }: ListChildComponentProps<RowData>) => {
   );
 };
 
-// composant principal qui affiche la liste des startups, et toutes les states
-export const StartupList: React.FC = () => {
-  const [startups, setStartups] = useState<Startup[]>([]);
-  const [loading, setLoading] = useState(true); // TODO state staus string pour le chargement pending, error, success
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); //TODOutilisation de use reducer pour la modale de details
-  const [selectedStartup, setSelectedStartup] = useState<StartupWithColor | null>(null);
-  const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [startupToDelete, setStartupToDelete] = useState<number | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingStartup, setEditingStartup] = useState<StartupWithColor | null>(null);
-
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newStartup, setNewStartup] = useState<Partial<Startup>>({
+// l'état initial pour la gestion des modales
+type NewStartupType = Partial<Startup> & { sector?: Sector; status?: Status };
+const initialModalState: {
+  isReadModalOpen: boolean;
+  selectedStartup: StartupWithColor | null;
+  isEditModalOpen: boolean;
+  editingStartup: StartupWithColor | null;
+  isCreateModalOpen: boolean;
+  newStartup: NewStartupType;
+  isDeleteConfirmOpen: boolean;
+  startupToDelete: number | null;
+} = {
+  isReadModalOpen: false,
+  selectedStartup: null,
+  isEditModalOpen: false,
+  editingStartup: null,
+  isCreateModalOpen: false,
+  newStartup: {
     name: '',
     valuation: 0,
     description: '',
     website: '',
     foundedYear: new Date().getFullYear(),
-  });
+    sector: undefined,
+    status: undefined,
+  },
+  isDeleteConfirmOpen: false,
+  startupToDelete: null,
+};
+
+// Reducer pour gérer toutes les actions sur les modales
+type ModalState = typeof initialModalState;
+type ModalAction =
+  | { type: 'OPEN_READ_MODAL'; startup: StartupWithColor }
+  | { type: 'CLOSE_READ_MODAL' }
+  | { type: 'OPEN_EDIT_MODAL'; startup: StartupWithColor }
+  | { type: 'CLOSE_EDIT_MODAL' }
+  | { type: 'OPEN_CREATE_MODAL'; sectors: Sector[]; statuses: Status[] }
+  | { type: 'CLOSE_CREATE_MODAL' }
+  | { type: 'UPDATE_NEW_STARTUP_FIELD'; field: keyof Omit<Startup, 'sector' | 'status'>; value: string | number }
+  | { type: 'UPDATE_NEW_STARTUP_DROPDOWN'; field: 'sector' | 'status'; value: Sector | Status }
+  | { type: 'OPEN_DELETE_CONFIRM'; startupId: number }
+  | { type: 'CLOSE_DELETE_CONFIRM' };
+
+function modalReducer(state: ModalState, action: ModalAction): ModalState {
+  switch (action.type) {
+    case 'OPEN_READ_MODAL':
+      return { ...state, isReadModalOpen: true, selectedStartup: action.startup };
+    case 'CLOSE_READ_MODAL':
+      return { ...state, isReadModalOpen: false, selectedStartup: null };
+    case 'OPEN_EDIT_MODAL':
+      return { ...state, isEditModalOpen: true, editingStartup: action.startup };
+    case 'CLOSE_EDIT_MODAL':
+      return { ...state, isEditModalOpen: false, editingStartup: null };
+    case 'OPEN_CREATE_MODAL':
+      return {
+        ...state,
+        isCreateModalOpen: true,
+        newStartup: {
+          name: '',
+          valuation: 0,
+          description: '',
+          website: '',
+          foundedYear: new Date().getFullYear(),
+          sector: action.sectors[0] || undefined,
+          status: action.statuses[0] || undefined,
+        }
+      };
+    case 'CLOSE_CREATE_MODAL':
+      return { ...state, isCreateModalOpen: false };
+    case 'UPDATE_NEW_STARTUP_FIELD':
+      return {
+        ...state,
+        newStartup: { ...state.newStartup, [action.field]: action.value }
+      };
+    case 'UPDATE_NEW_STARTUP_DROPDOWN':
+      return {
+        ...state,
+        newStartup: { ...state.newStartup, [action.field]: action.value }
+      };
+    case 'OPEN_DELETE_CONFIRM':
+      return { ...state, isDeleteConfirmOpen: true, startupToDelete: action.startupId };
+    case 'CLOSE_DELETE_CONFIRM':
+      return { ...state, isDeleteConfirmOpen: false, startupToDelete: null };
+    default:
+      return state;
+  }
+}
+
+// composant principal qui affiche la liste des startups, et toutes les states
+export const StartupList: React.FC = () => {
+  const [startups, setStartups] = useState<Startup[]>([]);
+  const [loading, setLoading] = useState(true); // Etat de chargement
+  const [error, setError] = useState<string | null>(null);
+  const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
 
+  // --- 3. Utilisation du reducer pour gérer toutes les modales ---
+  // modalState contient l'état, dispatchModal permet d'envoyer des actions
+  const [modalState, dispatchModal] = useReducer(modalReducer, initialModalState);
+
   const styles = useStyles();
 
-  // Ouvre la modale avecla startup sélectionnée 
+  // --- 4. Handlers pour ouvrir/fermer les modales via le reducer ---
+  // Ouvre la modale de détails (lecture seule)
   const handleRowClick = (startup: StartupWithColor) => {
-    setSelectedStartup(startup);
-    setIsModalOpen(true);
+    dispatchModal({ type: 'OPEN_READ_MODAL', startup });
   };
 
+  // Ouvre la modale d'édition
   const handleEditClick = (e: React.MouseEvent, startup: StartupWithColor) => {
     e.stopPropagation();
-    setEditingStartup(startup);
-    setIsEditModalOpen(true);
+    dispatchModal({ type: 'OPEN_EDIT_MODAL', startup });
   };
 
+  // Ouvre la modale de suppression
   const handleDeleteClick = (_e: React.MouseEvent, startupId: number) => {
-    setStartupToDelete(startupId);
-    setIsDeleteConfirmOpen(true);
+    dispatchModal({ type: 'OPEN_DELETE_CONFIRM', startupId });
   };
 
+  // Confirme la suppression d'une startup
   const handleConfirmDelete = async () => {
-    if (startupToDelete === null) {
+    if (modalState.startupToDelete === null) {
       return;
     }
-
     try {
-      await axios.delete(`${API_URL}/${startupToDelete}`);
-      // et on n'oublie pas de mettre à jour la state avec la nouvelle liste sans la startup supprimée
-      setStartups(prevStartups => prevStartups.filter(s => s.startupId !== startupToDelete));
+      await axios.delete(`${API_URL}/${modalState.startupToDelete}`);
+      setStartups(prevStartups => prevStartups.filter(s => s.startupId !== modalState.startupToDelete));
     } catch (err) {
       setError('Erreur lors de la suppression de la startup.');
     } finally {
-      setIsDeleteConfirmOpen(false);
-      setStartupToDelete(null);
+      dispatchModal({ type: 'CLOSE_DELETE_CONFIRM' });
     }
   };
 
+  // Annule la suppression
   const handleCancelDelete = () => {
-    setIsDeleteConfirmOpen(false);
-    setStartupToDelete(null);
+    dispatchModal({ type: 'CLOSE_DELETE_CONFIRM' });
   };
 
-  // Fonction appelée lors de l'édition d'une startup
-  const handleSaveEdit = async () => {
-    if (!editingStartup) return;
-
-    try {
-      // On retire color, sector, status de l'objet à envoyer
-      const { color, sector, status, ...startupToUpdate } = editingStartup;
-      // Vérification de la présence des relations
-      if (!sector || !status) {
-        setError("Secteur ou statut manquant !");
-        return;
-      }
-      // On prépare le body avec les ids uniquement
-      const requestBody = {
-        ...startupToUpdate, // on garde tous les champs sauf color, sector, status
-        sectorId: (sector as Sector).sectorId, // on envoie juste l'id
-        statusId: (status as Status).statusId  // idem
-      };
-      // Ajout de logs pour le debug
-      console.log('PATCH URL:', `${API_URL}/${editingStartup.startupId}`);
-      console.log('PATCH body:', requestBody);
-      console.log('startupId:', editingStartup.startupId, 'sectorId:', requestBody.sectorId, 'statusId:', requestBody.statusId);
-      // On envoie la requête 
-      const response = await axios.patch(`${API_URL}/${editingStartup.startupId}`, requestBody); 
-      // map() nous permet de parcourir chaque element du tableau et de remplacer la startup modifiée par la nouvelle réponse de l'API
-      setStartups(startups.map(s => 
-        s.startupId === editingStartup.startupId 
-          ? { ...response.data, color: editingStartup.color } // On remplace la startup modifiée dans la liste, en gardant la couleur
-          : s
-      ));
-      setIsEditModalOpen(false); // On ferme la modale d'édition
-      setEditingStartup(null);   // On réinitialise la startup en cours d'édition
-    } catch (err) {
-      setError("Erreur lors de la mise à jour de la startup.");
-    }
-  };
-  
+  // Ouvre la modale de création
   const handleOpenCreateModal = () => {
-    setNewStartup({
-      name: '',
-      valuation: 0,
-      description: '',
-      website: '',
-      foundedYear: new Date().getFullYear(),
-      sector: sectors[0],
-      status: statuses[0],
-    });
-    setIsCreateModalOpen(true);
+    dispatchModal({ type: 'OPEN_CREATE_MODAL', sectors, statuses });
   };
 
-  // gestion des champs du create form
+  // Gestion des champs du formulaire de création
   const handleCreateFormChange = (fieldName: keyof Omit<Startup, 'sector' | 'status'>, value: string | number) => {
-    setNewStartup(current => ({ ...current, [fieldName]: value }));
+    dispatchModal({ type: 'UPDATE_NEW_STARTUP_FIELD', field: fieldName, value });
   };
 
-  // gestion des dropdowns
+  // Gestion des dropdowns du formulaire de création
   const handleCreateDropdownChange = (fieldName: 'sector' | 'status', selectedId: string | undefined) => {
     if (selectedId === undefined) return;
-    
     const id = parseInt(selectedId, 10);
     const selectedValue = fieldName === 'sector'
       ? sectors.find(s => s.sectorId === id)
       : statuses.find(s => s.statusId === id);
-    
     if (selectedValue) {
-      setNewStartup(current => ({ ...current, [fieldName]: selectedValue }));
+      dispatchModal({ type: 'UPDATE_NEW_STARTUP_DROPDOWN', field: fieldName, value: selectedValue });
     }
   };
 
-  // Fonction appelée lors de la création 
+  // Fonction appelée lors de la création d'une startup
   const handleSaveNewStartup = async () => {
     try {
-      // On prépare le body avec les ids uniquement
+      if (!modalState.newStartup.sector || !modalState.newStartup.status) {
+        setError("Secteur ou statut manquant !");
+        return;
+      }
       const requestBody = {
-        ...newStartup,
-        sectorId: (newStartup.sector as Sector).sectorId,
-        statusId: (newStartup.status as Status).statusId
+        ...modalState.newStartup,
+        sectorId: modalState.newStartup.sector.sectorId,
+        statusId: modalState.newStartup.status.statusId
       };
       const response = await axios.post(API_URL, requestBody);
       const createdStartup = response.data;
       setStartups(currentStartups => [...currentStartups, createdStartup]);
-      setIsCreateModalOpen(false);
+      dispatchModal({ type: 'CLOSE_CREATE_MODAL' });
     } catch (err) {
       setError("Erreur lors de la création de la startup.");
+    }
+  };
+
+  // Fonction appelée lors de l'édition d'une startup
+  const handleSaveEdit = async () => {
+    if (!modalState.editingStartup) return;
+    try {
+      const { color, sector, status, ...startupToUpdate } = modalState.editingStartup;
+      if (!sector || !status) {
+        setError("Secteur ou statut manquant !");
+        return;
+      }
+      const requestBody = {
+        ...startupToUpdate,
+        sectorId: sector.sectorId,
+        statusId: status.statusId
+      };
+      const response = await axios.patch(`${API_URL}/${modalState.editingStartup.startupId}`, requestBody);
+      setStartups(startups.map(s =>
+        s.startupId === modalState.editingStartup!.startupId
+          ? { ...response.data, color: modalState.editingStartup!.color }
+          : s
+      ));
+      dispatchModal({ type: 'CLOSE_EDIT_MODAL' });
+    } catch (err) {
+      setError("Erreur lors de la mise à jour de la startup.");
     }
   };
 
@@ -340,53 +398,57 @@ export const StartupList: React.FC = () => {
 
       {/* modale pour afficher les détails d'une startup. */}
       <StartupModal
-        open={isModalOpen}
+        open={modalState.isReadModalOpen}
         mode="read"
-        onClose={() => setIsModalOpen(false)}
-        startup={selectedStartup}
+        onClose={() => dispatchModal({ type: 'CLOSE_READ_MODAL' })}
+        startup={modalState.selectedStartup}
         styles={{ dialogContent: styles.dialogContent, dialogSection: styles.dialogSection }}
       />
 
-      {/* modale de confirmation de suppression */}
+      {/* Modale de confirmation de suppression */}
       <DeleteConfirmModal
-        open={isDeleteConfirmOpen}
+        open={modalState.isDeleteConfirmOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
       />
 
-      {/* modale de création */}
+      {/* Modale de création */}
       <StartupModal
-        open={isCreateModalOpen}
+        open={modalState.isCreateModalOpen}
         mode="create"
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => dispatchModal({ type: 'CLOSE_CREATE_MODAL' })}
         onSave={handleSaveNewStartup}
         sectors={sectors}
         statuses={statuses}
-        startup={newStartup}
+        startup={modalState.newStartup}
         onFieldChange={handleCreateFormChange}
         onDropdownChange={handleCreateDropdownChange}
       />
 
       {/* Modale d'édition */}
       <StartupModal
-        open={isEditModalOpen}
+        open={modalState.isEditModalOpen}
         mode="edit"
-        onClose={() => setIsEditModalOpen(false)}
+        onClose={() => dispatchModal({ type: 'CLOSE_EDIT_MODAL' })}
         onSave={handleSaveEdit}
         sectors={sectors}
         statuses={statuses}
-        startup={editingStartup}
-        onFieldChange={(field, value) => setEditingStartup(s => s ? { ...s, [field]: value } : null)}
+        startup={modalState.editingStartup}
+        onFieldChange={(field, value) => {
+          if (!modalState.editingStartup) return;
+          // On met à jour le champ de la startup en cours d'édition
+          dispatchModal({ type: 'OPEN_EDIT_MODAL', startup: { ...modalState.editingStartup, [field]: value } });
+        }}
         onDropdownChange={(field, selectedId) => {
-          if (!editingStartup) return;
+          if (!modalState.editingStartup) return;
           if (field === 'sector') {
             const id = parseInt(selectedId || '', 10);
             const selectedSector = sectors.find(s => s.sectorId === id);
-            if (selectedSector) setEditingStartup(s => s ? { ...s, sector: selectedSector } : null);
+            if (selectedSector) dispatchModal({ type: 'OPEN_EDIT_MODAL', startup: { ...modalState.editingStartup, sector: selectedSector } });
           } else if (field === 'status') {
             const id = parseInt(selectedId || '', 10);
             const selectedStatus = statuses.find(s => s.statusId === id);
-            if (selectedStatus) setEditingStartup(s => s ? { ...s, status: selectedStatus } : null);
+            if (selectedStatus) dispatchModal({ type: 'OPEN_EDIT_MODAL', startup: { ...modalState.editingStartup, status: selectedStatus } });
           }
         }}
       />
