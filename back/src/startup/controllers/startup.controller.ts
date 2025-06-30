@@ -8,9 +8,7 @@ export class StartupController {
   constructor(private readonly startupService: StartupService) {}
 
   @Post()
-  // le body doit contenir un objet avec la clé 'startup' (même structure que pour la création).
   createStartup(@Body() body: StartupDto) {
-    // On passe uniquement l'objet startup au service
     return this.startupService.create(body.startup);
   }
 
@@ -29,7 +27,6 @@ export class StartupController {
     @Param('id') id: string,
     @Body() body: StartupDto,
   ) {
-    // On passe uniquement l'objet startup au service
     return this.startupService.update(Number(id), body.startup);
   }
 

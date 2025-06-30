@@ -1,4 +1,37 @@
-node_modules
+# Node modules 
+node_modules/
 
+# Build output 
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers d'environnement
 .env
+.env.*
+back/.env
+front/.env
 
+# Prisma (bases de données locales, journaux)
+prisma/dev.db
+prisma/dev.db-journal
+back/prisma/dev.db
+back/prisma/dev.db-journal
+
+# Dossiers d'IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Coverage (tests)
+coverage/
+back/coverage/
+front/coverage/
+
+# Autres fichiers temporaires
+*.tsbuildinfo
