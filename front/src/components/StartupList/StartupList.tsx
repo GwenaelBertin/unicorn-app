@@ -63,7 +63,7 @@ const useStyles = makeStyles({
 
 const API_URL = 'http://localhost:3000/startups';
 
-//Ici on utilise React.forwardRef pour passer la ref. 
+// Ici on utilise React.forwardRef pour passer la ref. 
 // il faut le faire pour que react-window fonctionne correctement avec le composant List.
  
 const StartupListRenderer = React.forwardRef<HTMLDivElement, React.PropsWithChildren>((props, ref) => {
@@ -72,6 +72,7 @@ const StartupListRenderer = React.forwardRef<HTMLDivElement, React.PropsWithChil
   );
 });
 
+// Ici on définit le type des données passées à la fonction Row
 type RowData = {
   startups: StartupWithColor[];
   focusedItemId: number | null;
@@ -193,22 +194,50 @@ function modalReducer(state: ModalState, action: ModalAction): ModalState {
   }
 }
 
+// a nouveau reducer pour loading et error
+type FetchState = {
+  loading: boolean;
+  error: string | null;
+};
+
+type FetchAction =
+  | { type: 'FETCH_START' }
+  | { type: 'FETCH_SUCCESS' }
+  | { type: 'FETCH_ERROR'; error: string };
+
+function fetchReducer(state: FetchState, action: FetchAction): FetchState {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { loading: true, error: null };
+    case 'FETCH_SUCCESS':
+      return { loading: false, error: null };
+    case 'FETCH_ERROR':
+      return { loading: false, error: action.error };
+    default:
+      return state;
+  }
+}
+
 // composant principal qui affiche la liste des startups, et toutes les states
 export const StartupList: React.FC = () => {
   const [startups, setStartups] = useState<Startup[]>([]);
-  const [loading, setLoading] = useState(true); // Etat de chargement
-  const [error, setError] = useState<string | null>(null);
+  
   const [focusedItemId, setFocusedItemId] = useState<number | null>(null);
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
 
-  // --- 3. Utilisation du reducer pour gérer toutes les modales ---
+  // Utilisation du hook useReducer pour gérer toutes les modales
+  // cf doc https://fr.react.dev/reference/react/useReducer
   // modalState contient l'état, dispatchModal permet d'envoyer des actions
   const [modalState, dispatchModal] = useReducer(modalReducer, initialModalState);
 
+  // hook useReducer pour gérer le chargement et l'erreur
+  // fetchState contient l'état, dispatchFetch permet d'envoyer des actions
+  const [fetchState, dispatchFetch] = useReducer(fetchReducer, { loading: true, error: null });
+
   const styles = useStyles();
 
-  // --- 4. Handlers pour ouvrir/fermer les modales via le reducer ---
+  // Handlers pour ouvrir/fermer les modales via le reducer ---
   // Ouvre la modale de détails (lecture seule)
   const handleRowClick = (startup: StartupWithColor) => {
     dispatchModal({ type: 'OPEN_READ_MODAL', startup });
@@ -234,7 +263,7 @@ export const StartupList: React.FC = () => {
       await axios.delete(`${API_URL}/${modalState.startupToDelete}`);
       setStartups(prevStartups => prevStartups.filter(s => s.startupId !== modalState.startupToDelete));
     } catch (err) {
-      setError('Erreur lors de la suppression de la startup.');
+      dispatchFetch({ type: 'FETCH_ERROR', error: 'Erreur lors de la suppression de la startup.' });
     } finally {
       dispatchModal({ type: 'CLOSE_DELETE_CONFIRM' });
     }
@@ -271,7 +300,7 @@ export const StartupList: React.FC = () => {
   const handleSaveNewStartup = async () => {
     try {
       if (!modalState.newStartup.sector || !modalState.newStartup.status) {
-        setError("Secteur ou statut manquant !");
+        dispatchFetch({ type: 'FETCH_ERROR', error: 'Secteur ou statut manquant !' });
         return;
       }
       const requestBody = {
@@ -284,7 +313,7 @@ export const StartupList: React.FC = () => {
       setStartups(currentStartups => [...currentStartups, createdStartup]);
       dispatchModal({ type: 'CLOSE_CREATE_MODAL' });
     } catch (err) {
-      setError("Erreur lors de la création de la startup.");
+      dispatchFetch({ type: 'FETCH_ERROR', error: 'Erreur lors de la création de la startup.' });
     }
   };
 
@@ -294,7 +323,7 @@ export const StartupList: React.FC = () => {
     try {
       const { color, sector, status, ...startupToUpdate } = modalState.editingStartup;
       if (!sector || !status) {
-        setError("Secteur ou statut manquant !");
+        dispatchFetch({ type: 'FETCH_ERROR', error: 'Secteur ou statut manquant !' });
         return;
       }
       const requestBody = {
@@ -310,11 +339,11 @@ export const StartupList: React.FC = () => {
       ));
       dispatchModal({ type: 'CLOSE_EDIT_MODAL' });
     } catch (err) {
-      setError("Erreur lors de la mise à jour de la startup.");
+      dispatchFetch({ type: 'FETCH_ERROR', error: 'Erreur lors de la mise à jour de la startup.' });
     }
   };
 
-  // ici on utilise usememo pour ne pas recalculer les couleurs
+  // ici on utilise useMemo pour ne pas recalculer les couleurs
   const startupsWithColors = useMemo(() => {
     const coloredStartups = startups.map((startup) => {
       const newStartup: StartupWithColor = {
@@ -351,6 +380,7 @@ export const StartupList: React.FC = () => {
 
   useEffect(() => {
     const fetchInitialData = async () => {
+      dispatchFetch({ type: 'FETCH_START' });
       try {
         const [startupsRes, sectorsRes, statusesRes] = await Promise.all([
           axios.get<Startup[]>(API_URL),
@@ -361,17 +391,16 @@ export const StartupList: React.FC = () => {
         setStartups(startupsRes.data);
         setSectors(sectorsRes.data);
         setStatuses(statusesRes.data);
+        dispatchFetch({ type: 'FETCH_SUCCESS' });
       } catch (err) {
-        setError('Erreur lors du chargement des startups.');
-      } finally {
-        setLoading(false);
+        dispatchFetch({ type: 'FETCH_ERROR', error: 'Erreur lors du chargement des startups.' });
       }
     };
     fetchInitialData();
   }, []);
-
-  if (loading) return <div>Chargement...</div>;
-  if (error) return <div>{error}</div>;
+  // c'est ici que l'on affiche le loading et l'erreur
+  if (fetchState.loading) return <div>Chargement...</div>;
+  if (fetchState.error) return <div>{fetchState.error}</div>;
 
   return (
     <div className={styles.root}>
