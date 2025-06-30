@@ -8,9 +8,9 @@ const StartupSchema =  extendApi
         .object({
             name: z.string().min(1),
             valuation: z.number().min(0),
-            description: z.string().min(1),
-            website: z.string().min(1),
-            foundedYear: z.number().min(1900),
+            description: z.string().min(1).optional(),
+            website: z.string().min(1).optional(),
+            foundedYear: z.number().min(1900).optional(),
             sectorId: z.number().min(1),
             statusId: z.number().min(1),
         })
