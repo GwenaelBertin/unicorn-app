@@ -30,16 +30,23 @@ export class StartupService {
     });
   }
 
-  findAll() {
-    return this.prisma.startup.findMany({
-      include: {
-        sector: true,
-        status: true,
-      },
-      orderBy: {
-        valuation: 'desc',
-      },
-    });
+  async findAll() {
+    console.log('StartupService.findAll called');
+    try {
+      const startups = await this.prisma.startup.findMany({
+        include: {
+          sector: true,
+          status: true,
+        },
+        orderBy: {
+          valuation: 'desc',
+        },
+      });
+      return startups;
+    } catch (error) {
+      console.error('Erreur dans findAll:', error);
+      throw error;
+    }
   }
 
   findOne(id: number) {

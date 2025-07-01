@@ -5,7 +5,9 @@ import StartupDto from '../models/dto/startup.dto';
 
 @Controller('startups')
 export class StartupController {
-  constructor(private readonly startupService: StartupService) {}
+  constructor(private readonly startupService: StartupService) {
+    console.log('StartupController loaded');
+  }
 
   @Post()
   createStartup(@Body() body: StartupDto) {
@@ -13,9 +15,18 @@ export class StartupController {
   }
 
   @Get()
-  getAllStartups() {
-    return this.startupService.findAll();
+async getAllStartups() {
+  console.log('GET /api/startups called');
+  try {
+    const result = await this.startupService.findAll();
+    console.log('Résultat startups:', result);
+    return result;
+  } catch (error) {
+    console.error('Erreur dans le controller:', error);
+    throw error;
   }
+}
+    
 
   @Get(':id')
   getOneStartup(@Param('id') id: string) {

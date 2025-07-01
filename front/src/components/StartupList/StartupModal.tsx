@@ -54,7 +54,7 @@ const StartupModal: React.FC<StartupModalProps> = ({
   // Ajout du useRef pour l'input de la valorisation
   const valuationInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus automatique sur l'input valorisation en mode création
+  // Focus automatique en mode création
   useEffect(() => {
     if (open && mode === 'create' && valuationInputRef.current) {
       valuationInputRef.current.focus();
