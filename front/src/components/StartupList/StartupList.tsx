@@ -61,7 +61,7 @@ const useStyles = makeStyles({
   }
 });
 
-const API_URL = 'http://localhost:3000/startups';
+const API_BASE_URL = '/api';
 
 // Ici on utilise React.forwardRef pour passer la ref. 
 // il faut le faire pour que react-window fonctionne correctement avec le composant List.
@@ -260,7 +260,7 @@ export const StartupList: React.FC = () => {
       return;
     }
     try {
-      await axios.delete(`${API_URL}/${modalState.startupToDelete}`);
+      await axios.delete(`${API_BASE_URL}/startups/${modalState.startupToDelete}`);
       setStartups(prevStartups => prevStartups.filter(s => s.startupId !== modalState.startupToDelete));
     } catch (err) {
       dispatchFetch({ type: 'FETCH_ERROR', error: 'Erreur lors de la suppression de la startup.' });
@@ -308,7 +308,7 @@ export const StartupList: React.FC = () => {
         sectorId: modalState.newStartup.sector.sectorId,
         statusId: modalState.newStartup.status.statusId
       };
-      const response = await axios.post(API_URL, requestBody);
+      const response = await axios.post(`${API_BASE_URL}/startups`, requestBody);
       const createdStartup = response.data;
       setStartups(currentStartups => [...currentStartups, createdStartup]);
       dispatchModal({ type: 'CLOSE_CREATE_MODAL' });
@@ -331,7 +331,7 @@ export const StartupList: React.FC = () => {
         sectorId: sector.sectorId,
         statusId: status.statusId
       };
-      const response = await axios.patch(`${API_URL}/${modalState.editingStartup.startupId}`, requestBody);
+      const response = await axios.patch(`${API_BASE_URL}/startups/${modalState.editingStartup.startupId}`, requestBody);
       setStartups(startups.map(s =>
         s.startupId === modalState.editingStartup!.startupId
           ? { ...response.data, color: modalState.editingStartup!.color }
@@ -383,11 +383,12 @@ export const StartupList: React.FC = () => {
       dispatchFetch({ type: 'FETCH_START' });
       try {
         const [startupsRes, sectorsRes, statusesRes] = await Promise.all([
-          axios.get<Startup[]>(API_URL),
-          axios.get<Sector[]>(`${API_URL.replace('/startups', '')}/sectors`),
-          axios.get<Status[]>(`${API_URL.replace('/startups', '')}/status`)
+          axios.get<Startup[]>(`${API_BASE_URL}/startups`),
+          axios.get<Sector[]>(`${API_BASE_URL}/sector`),
+          axios.get<Status[]>(`${API_BASE_URL}/status`)
         ]);
 
+        console.log('startupsRes.data', startupsRes.data);
         setStartups(startupsRes.data);
         setSectors(sectorsRes.data);
         setStatuses(statusesRes.data);
