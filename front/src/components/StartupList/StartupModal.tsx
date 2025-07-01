@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogSurface,
@@ -51,6 +51,16 @@ const StartupModal: React.FC<StartupModalProps> = ({
   const isEditOrCreate = mode === 'edit' || mode === 'create';
   const isCreate = mode === 'create';
 
+  // Ajout du useRef pour l'input de la valorisation
+  const valuationInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus automatique sur l'input valorisation en mode création
+  useEffect(() => {
+    if (open && mode === 'create' && valuationInputRef.current) {
+      valuationInputRef.current.focus();
+    }
+  }, [open, mode]);
+
   return (
     <Dialog open={open} onOpenChange={(_event, data) => { if (!data.open) onClose(); }}>
       <DialogSurface>
@@ -88,6 +98,7 @@ const StartupModal: React.FC<StartupModalProps> = ({
               {isEditOrCreate ? (
                 <Field label="Valorisation ($)" required>
                   <Input
+                    ref={valuationInputRef}
                     type="number"
                     value={startup?.valuation?.toString() || ''}
                     onChange={(_e, data) => onFieldChange && onFieldChange('valuation', Number(data.value))}
