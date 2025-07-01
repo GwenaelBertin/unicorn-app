@@ -1,7 +1,6 @@
 // Point d'entrée de l'app, démarre le serveur.
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { PrismaModule } from './prisma/prisma.module';
 
 async function bootstrap() {
   // Creation de l'app NestJS à partir du module principal

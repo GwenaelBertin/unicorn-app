@@ -6,9 +6,10 @@ import { PrismaModule } from './prisma/prisma.module';
 import { StartupModule } from './startup/startup.module';
 import { SectorModule } from './sector/sector.module';
 import { StatusModule } from './status/status.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PrismaModule, StartupModule, SectorModule, StatusModule],
+  imports: [ConfigModule.forRoot(),PrismaModule, StartupModule, SectorModule, StatusModule],
   controllers: [AppController],
   providers: [AppService],
 })

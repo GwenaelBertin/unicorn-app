@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Utilise la variable d'environnement VITE_API_URL pour le proxy backend, ou localhost:5002 par défaut
+// variable d'environnement VITE_API_URL pour le proxy backend, ou localhost:5002 par défaut
 const apiUrl = process.env.VITE_API_URL || 'http://localhost:5002';
 
 // https://vite.dev/config/
@@ -16,8 +16,7 @@ export default defineConfig({
         target: apiUrl,
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
-})
+});
