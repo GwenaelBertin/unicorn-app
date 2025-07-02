@@ -8,20 +8,36 @@
 // Dans le monde des startups, le terme licorne est utilisé pour décrire une entreprise dont la valorisation est supérieure à 1 milliard de dollars.
 
 generator client {
-provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-provider = "sqlserver"
-url      = env("DATABASE_URL")
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// va automatiquement générer les DTOs pour chaque modèle
+generator nestjsDto {
+  // https://github.com/vegardit/prisma-generator-nestjs-dto
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "./generated/entities"
+  outputToNestJsResourceStructure = "false"
+  exportRelationModifierClasses   = "true"
+  reExport                        = "false"
+  createDtoPrefix                 = "Create"
+  updateDtoPrefix                 = "Update"
+  dtoSuffix                       = "Dto"
+  entityPrefix                    = ""
+  entitySuffix                    = "Entity"
+  fileNamingStyle                 = "camel"
 }
 
 model Sector {
-sectorId    Int       @id @default(autoincrement()) @map("sector_id")
-name        String    @unique @map("name") @db.NVarChar(255)
-startups    Startup[]
+  sectorId    Int       @id @default(autoincrement()) @map("sector_id")
+  name        String    @unique @map("name") @db.NVarChar(255)
+  startups    Startup[]
 
-@@map("sector")
+  @@map("sector")
 }
 
 model Status {
@@ -33,21 +49,58 @@ model Status {
 }
 
 model Startup {
-startupId    Int       @id @default(autoincrement()) @map("startup_id")
-name         String    @unique @map("name") @db.NVarChar(255)
-foundedYear  Int?      @map("founded_year")
-valuation    Decimal   @map("valuation") @db.Decimal(20,2)
-website      String?   @map("website") @db.NVarChar(255)
-description  String?   @map("description") @db.NVarChar(255)
+  startupId    Int       @id @default(autoincrement()) @map("startup_id")
+  name         String    @unique @map("name") @db.NVarChar(255)
+  foundedYear  Int?      @map("founded_year")
+  valuation    Decimal   @map("valuation") @db.Decimal(20,2)
+  website      String?   @map("website") @db.NVarChar(255)
+  description  String?   @map("description") @db.NVarChar(255)
 
-sectorId     Int       @map("sector_id")
-sector       Sector    @relation(fields: [sectorId], references: [sectorId])
+  sectorId     Int       @map("sector_id")
+  sector       Sector    @relation(fields: [sectorId], references: [sectorId])
 
-statusId     Int       @map("status_id")
-status       Status    @relation(fields: [statusId], references: [statusId])
+  statusId     Int       @map("status_id")
+  status       Status    @relation(fields: [statusId], references: [statusId])
 
-createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime
-updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime
 
-@@map("startup")
+  @@map("startup")
+}
+
+model Profile {
+  profileId Int      @id @default(autoincrement()) @map("profile_id")
+  name      String   @map("name") @db.NVarChar(255)
+  users     User[]
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.DateTime
+
+  @@map("profile")
+}
+
+model RefreshToken {
+  refreshTokenId Int      @id @default(autoincrement()) @map("refresh_token_id")
+  value          String   @map("value") @db.NVarChar(510)
+  userId         Int?     @map("user_id")
+  user           User?    @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime
+
+  @@map("refresh_token")
+}
+
+model User {
+  userId             Int            @id @default(autoincrement()) @map("user_id")
+  email              String         @map("email") @db.NVarChar(255)
+  password           String         @map("password") @db.NVarChar(255)
+  firstname          String         @map("firstname") @db.NVarChar(255)
+  lastname           String         @map("lastname") @db.NVarChar(255)
+  profileId          Int            @map("profile_id")
+  profile            Profile        @relation(fields: [profileId], references: [profileId], onDelete: NoAction, onUpdate: NoAction)
+  refreshTokens      RefreshToken[]
+  resetPasswordToken String?        @map("reset_password_token") @db.NVarChar(255)
+  resetPasswordDate  DateTime?      @map("reset_password_date")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.DateTime
+  updatedAt          DateTime       @default(now()) @updatedAt @map("updated_at") @db.DateTime
+
+  @@map("user")
 }

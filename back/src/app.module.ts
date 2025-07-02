@@ -7,9 +7,17 @@ import { StartupModule } from './startup/startup.module';
 import { SectorModule } from './sector/sector.module';
 import { StatusModule } from './status/status.module';
 import { ConfigModule } from '@nestjs/config';
+import { AuthentificationModule } from './authentifications/authentification.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(),PrismaModule, StartupModule, SectorModule, StatusModule],
+  imports: [
+    ConfigModule.forRoot(),
+    PrismaModule,
+    AuthentificationModule,
+    StartupModule,
+    SectorModule,
+    StatusModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
