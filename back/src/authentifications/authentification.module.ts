@@ -5,11 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config'; // module pour les
 import { AuthentificationService } from './authentification.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthentificationController } from './authentification.controller';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
     PrismaModule,
     PassportModule,
+    ConfigModule,
     JwtModule.registerAsync({
       // Importe ConfigModule pour accéder aux variables d'environnement
       imports: [ConfigModule],
@@ -28,7 +30,7 @@ import { AuthentificationController } from './authentification.controller';
   ],
   controllers: [AuthentificationController],
   // Déclare le service d'auth comme provider
-  providers: [AuthentificationService],
+  providers: [AuthentificationService, JwtStrategy],
   // Exporte le service d'auth pour qu'il soit utilisable dans d'autres modules
   exports: [AuthentificationService],
 })

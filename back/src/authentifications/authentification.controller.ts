@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthentificationService } from './authentification.service';
 
 // DTO pour valider les entrées du login
@@ -11,6 +11,7 @@ export class LoginDto {
 export class AuthentificationController {
   constructor(private readonly authentificationService: AuthentificationService) {}
 
+  @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     // Valide l'utilisateur (lève une exception si mauvais identifiants)
