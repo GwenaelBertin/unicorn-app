@@ -68,37 +68,37 @@ model Startup {
   @@map("startup")
 }
 
-model Profile {
-  profileId Int      @id @default(autoincrement()) @map("profile_id")
-  name      String   @map("name") @db.NVarChar(255)
-  users     User[]
-  createdAt DateTime @default(now()) @map("created_at") @db.DateTime
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.DateTime
+// model Profile {
+//   profileId Int      @id @default(autoincrement()) @map("profile_id")
+//   name      String   @map("name") @db.NVarChar(255)
+//   users     User[]
+//   createdAt DateTime @default(now()) @map("created_at") @db.DateTime
+  // updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.DateTime
 
-  @@map("profile")
-}
+//   @@map("profile")
+// }
 
-model RefreshToken {
-  refreshTokenId Int      @id @default(autoincrement()) @map("refresh_token_id")
-  value          String   @map("value") @db.NVarChar(510)
-  userId         Int?     @map("user_id")
-  user           User?    @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
-  createdAt      DateTime @default(now()) @map("created_at") @db.DateTime
+// model RefreshToken {
+//   refreshTokenId Int      @id @default(autoincrement()) @map("refresh_token_id")
+//   value          String   @map("value") @db.NVarChar(510)
+//   userId         Int?     @map("user_id")
+//   user           User?    @relation(fields: [userId], references: [userId], onDelete: Cascade, onUpdate: NoAction)
+//   createdAt      DateTime @default(now()) @map("created_at") @db.DateTime
 
-  @@map("refresh_token")
-}
+//   @@map("refresh_token")
+// }
 
 model User {
   userId             Int            @id @default(autoincrement()) @map("user_id")
   email              String         @map("email") @db.NVarChar(255)
   password           String         @map("password") @db.NVarChar(255)
-  firstname          String         @map("firstname") @db.NVarChar(255)
-  lastname           String         @map("lastname") @db.NVarChar(255)
-  profileId          Int            @map("profile_id")
-  profile            Profile        @relation(fields: [profileId], references: [profileId], onDelete: NoAction, onUpdate: NoAction)
-  refreshTokens      RefreshToken[]
-  resetPasswordToken String?        @map("reset_password_token") @db.NVarChar(255)
-  resetPasswordDate  DateTime?      @map("reset_password_date")
+  // firstname          String         @map("firstname") @db.NVarChar(255)
+  // lastname           String         @map("lastname") @db.NVarChar(255)
+  // profileId          Int            @map("profile_id")
+  // profile            Profile        @relation(fields: [profileId], references: [profileId], onDelete: NoAction, onUpdate: NoAction)
+  // refreshTokens      RefreshToken[]
+  // resetPasswordToken String?        @map("reset_password_token") @db.NVarChar(255)
+  // resetPasswordDate  DateTime?      @map("reset_password_date")
   createdAt          DateTime       @default(now()) @map("created_at") @db.DateTime
   updatedAt          DateTime       @default(now()) @updatedAt @map("updated_at") @db.DateTime
 
