@@ -90,17 +90,10 @@ model Startup {
 
 model User {
   userId             Int            @id @default(autoincrement()) @map("user_id")
-  email              String         @map("email") @db.NVarChar(255)
+  email              String         @unique @map("email") @db.NVarChar(255)
   password           String         @map("password") @db.NVarChar(255)
-  // firstname          String         @map("firstname") @db.NVarChar(255)
-  // lastname           String         @map("lastname") @db.NVarChar(255)
-  // profileId          Int            @map("profile_id")
-  // profile            Profile        @relation(fields: [profileId], references: [profileId], onDelete: NoAction, onUpdate: NoAction)
-  // refreshTokens      RefreshToken[]
-  // resetPasswordToken String?        @map("reset_password_token") @db.NVarChar(255)
-  // resetPasswordDate  DateTime?      @map("reset_password_date")
   createdAt          DateTime       @default(now()) @map("created_at") @db.DateTime
-  updatedAt          DateTime       @default(now()) @updatedAt @map("updated_at") @db.DateTime
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.DateTime
 
   @@map("user")
 }

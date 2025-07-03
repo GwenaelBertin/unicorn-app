@@ -1,9 +1,9 @@
 /**
  * Ce service gère les fonctionnalités principales liées à l'auth:
  * - Validation des users
- * - Génération des tokens JWT (access & refresh token)
+ * - Génération des tokens JWT 
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -34,14 +34,11 @@ export class AuthentificationService {
   async validateUser(email: string, password: string) {
     // On recherche l'utilisateur par email avec son profil
     const user = await this.prisma.user.findFirst({ where: { email } });
-
-    // On vérifie si le user existe et si le mdp correspond
-    if (user && (await bcrypt.compare(password, user.password))) {
-      // Bien entendu, on retire le mdp des infos du return !!
-      const { password, ...result } = user;
-      return result;
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException('Invalid credentials');
     }
-    return null;
+    const { password: _, ...result } = user;
+    return result;
   }
 
   /**

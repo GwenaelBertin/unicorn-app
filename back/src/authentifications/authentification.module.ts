@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport'; // Framework d'authentificati
 import { ConfigModule, ConfigService } from '@nestjs/config'; // module pour les variables d'environnement
 import { AuthentificationService } from './authentification.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AuthentificationController } from './authentification.controller';
 
 @Module({
   imports: [
@@ -20,11 +21,12 @@ import { PrismaModule } from '../prisma/prisma.module';
         secret: configService.get('JWT_SECRET_KEY'),
         // Options de config pour les tokens générés par défaut
         signOptions: { 
-          expiresIn: '15m', 
+          expiresIn: '60m', 
         },
       }),
     }),
   ],
+  controllers: [AuthentificationController],
   // Déclare le service d'auth comme provider
   providers: [AuthentificationService],
   // Exporte le service d'auth pour qu'il soit utilisable dans d'autres modules
